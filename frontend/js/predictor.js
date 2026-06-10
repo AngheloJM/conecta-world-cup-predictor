@@ -203,4 +203,4 @@ function updateProgress() {
     saveBtn.disabled = true; lastChampFired = null;
   }
 }
-document.getElementById('save-btn').addEventListener('click', () => { saveState(); toast('Predicción guardada ✓'); });
+document.getElementById('save-btn').addEventListener('click', () => { guardarPrediccion(); });

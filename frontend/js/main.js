@@ -46,24 +46,28 @@ function tick() {
   document.getElementById('cd-chip').textContent = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
 }
 
-// ---------- Formulario (nombre + envío de todo) ----------
+// ---------- Guardado de la predicción (local + servidor) ----------
+async function guardarPrediccion() {
+  saveState(); // siempre cachea local
+  if (!Auth.token()) { toast('Guardado localmente'); return; }
+  let sub = null;
+  if (S.f && S.sf[0] && S.sf[1]) sub = (S.f === S.sf[0] ? S.sf[1] : S.sf[0]).name;
+  try {
+    await api.saveSimulacion({
+      campeon_predicho: S.f ? S.f.name : null,
+      subcampeon_predicho: sub,
+      estructura_bracket_json: serializeState(),
+    });
+    toast('Predicción guardada en tu cuenta ✓');
+  } catch (e) {
+    toast('Guardado local; error en servidor: ' + e.message, 'err');
+  }
+}
+
+// ---------- Formulario del calendario ----------
 const nombreEl = document.getElementById('nombre');
 nombreEl.addEventListener('input', () => { S.nombre = nombreEl.value; saveState(); });
-
-document.getElementById('predict-form').addEventListener('submit', e => {
-  e.preventDefault();
-  if (!S.nombre.trim()) { toast('Escribe tu nombre', 'err'); return; }
-  const payload = {
-    usuario: { nombre: S.nombre },
-    campeon: S.f ? S.f.name : null,
-    grupos: Object.fromEntries(Object.entries(GROUPS).map(([g, ts]) => [g, ts.map((x, i) => ({ pos: i + 1, equipo: x.name }))])),
-    mejores_terceros: selectedThirds().map(x => x.name),
-    apuestas: Object.entries(S.bets).map(([id, b]) => ({ partido_id: +id, prediccion_local: +(b.l || 0), prediccion_visitante: +(b.v || 0) })),
-  };
-  console.log('Payload listo para el backend Rust:', payload);
-  saveState();
-  toast('¡Predicciones enviadas! ✓');
-});
+document.getElementById('predict-form').addEventListener('submit', e => { e.preventDefault(); guardarPrediccion(); });
 
 // ============================================================  INIT
 (function init() {

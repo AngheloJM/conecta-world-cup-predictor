@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT campeon_predicho, subcampeon_predicho, estructura_bracket_json, bloqueado\n           FROM simulacion_inicial WHERE usuario_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "campeon_predicho",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "subcampeon_predicho",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "estructura_bracket_json",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "bloqueado",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "c5f1b30e896b0291db0e064d79a3068c21c3d026faaf663cc53683bdbd8dc275"
+}

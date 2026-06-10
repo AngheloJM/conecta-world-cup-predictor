@@ -36,5 +36,7 @@ const api = {
   register: (body) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   me: () => apiFetch('/me'),
-  // Futuro (paso 3): guardarApuesta, getResultados, getRanking...
+  getSimulacion: () => apiFetch('/simulacion'),
+  saveSimulacion: (body) => apiFetch('/simulacion', { method: 'PUT', body: JSON.stringify(body) }),
+  // Futuro (paso 4): getResultados, getRanking...
 };

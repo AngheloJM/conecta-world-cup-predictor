@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO simulacion_inicial (usuario_id, campeon_predicho, subcampeon_predicho, estructura_bracket_json)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (usuario_id) DO UPDATE SET\n            campeon_predicho = EXCLUDED.campeon_predicho,\n            subcampeon_predicho = EXCLUDED.subcampeon_predicho,\n            estructura_bracket_json = EXCLUDED.estructura_bracket_json,\n            actualizado = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Varchar",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a66129de99879a5bf2400554ddb3e22604e3bdbf83e75476a654c112591a1af1"
+}

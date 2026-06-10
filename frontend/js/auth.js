@@ -44,6 +44,18 @@ function enterApp(user) {
   userArea.classList.remove('hidden');
   userArea.classList.add('flex');
   userName.textContent = user.nombre;
+  loadUserPrediction();
+}
+
+// Trae la predicción guardada del usuario y la pinta (si existe).
+async function loadUserPrediction() {
+  try {
+    const sim = await api.getSimulacion();
+    if (sim && sim.estructura_bracket_json) {
+      applyState(sim.estructura_bracket_json);
+      refreshAllFromState();
+    }
+  } catch (_) { /* sin predicción previa o sin conexión */ }
 }
 
 tabLogin.addEventListener('click', () => setAuthMode('login'));

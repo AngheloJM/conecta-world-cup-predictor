@@ -3,6 +3,7 @@
 
 mod auth;
 mod scoring;
+mod sim;
 
 use axum::{
     extract::State,
@@ -129,14 +130,16 @@ async fn health() -> impl IntoResponse {
 #[derive(OpenApi)]
 #[openapi(
     info(title = "Conecta · World Cup Predictor API", version = "0.1.0", description = "API de la polla mundialista: autenticación y apuestas."),
-    paths(auth::register, auth::login, auth::me, crear_apuesta, health),
+    paths(auth::register, auth::login, auth::me, sim::guardar, sim::obtener, crear_apuesta, health),
     components(schemas(
         auth::RegisterReq, auth::LoginReq, auth::AuthResp, auth::UsuarioOut,
+        sim::GuardarSim, sim::SimOut,
         ApiError, NuevaApuesta, ApuestaCreada
     )),
     modifiers(&SecurityAddon),
     tags(
         (name = "auth", description = "Registro, login y sesión"),
+        (name = "predicciones", description = "Simulación del Mundial del usuario"),
         (name = "apuestas", description = "Predicciones por partido"),
         (name = "sistema", description = "Salud del servicio")
     )
@@ -199,6 +202,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/register", post(auth::register))
         .route("/auth/login", post(auth::login))
         .route("/me", get(auth::me))
+        .route("/simulacion", get(sim::obtener).put(sim::guardar))
         .route("/apuestas", post(crear_apuesta))
         .route("/openapi.json", get(openapi_json))
         .route("/docs", get(docs_ui))
