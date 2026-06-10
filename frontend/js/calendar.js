@@ -79,7 +79,7 @@ function renderCalendar() {
         <h3 class="text-sm font-extrabold text-white capitalize">${day}</h3>
         <span class="text-[10px] font-semibold uppercase tracking-wide text-blue-200 bg-white/5 border border-white/10 rounded px-2 py-0.5">${items.length} ${items.length === 1 ? 'partido' : 'partidos'}</span>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(matchRow).join('')}</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">${items.map(matchRow).join('')}</div>
     </div>`).join('');
 }
 
