@@ -34,10 +34,10 @@ function renderGroups() {
             ${flag(tm, 'w-6')}
             <span class="text-[10px] font-extrabold w-9 text-center px-1 py-0.5 rounded ${i < 2 ? 'bg-acento/25 text-acento' : i === 2 ? 'bg-blue-400/20 text-blue-200' : 'bg-white/10 text-white/60'}">${tm.cod}</span>
             <span class="text-sm font-semibold truncate flex-1 min-w-0 ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tName(tm.name)}</span>
-            ${i < 2 ? '<span class="text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : ''}
-            <span class="flex flex-col leading-none flex-shrink-0">
-              <button type="button" data-move="up" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 hover:text-acento ${i === 0 ? 'invisible' : ''}">▲</button>
-              <button type="button" data-move="down" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 hover:text-acento ${i === teams.length - 1 ? 'invisible' : ''}">▼</button>
+            ${i < 2 ? '<span class="text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : '<span class="text-white/20 flex-shrink-0 hidden sm:inline">⠿</span>'}
+            <span class="flex flex-col leading-none flex-shrink-0 sm:hidden">
+              <button type="button" data-move="up" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 active:text-acento ${i === 0 ? 'invisible' : ''}">▲</button>
+              <button type="button" data-move="down" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 active:text-acento ${i === teams.length - 1 ? 'invisible' : ''}">▼</button>
             </span>
           </li>`).join('')}
       </ul>
