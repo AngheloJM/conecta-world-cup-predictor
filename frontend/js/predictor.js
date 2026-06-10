@@ -23,22 +23,42 @@ function renderGroups() {
     <div class="bg-white/5 rounded-card border border-white/10 overflow-hidden">
       <div class="bg-white/5 border-b border-white/10 px-4 py-2.5 flex items-center justify-between">
         <span class="font-extrabold text-white">Grupo ${g}</span>
-        <span class="text-[10px] font-semibold uppercase tracking-wide text-blue-200/70">Arrastra ↕</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-blue-200/70">Ordena ↕</span>
       </div>
       <ul class="p-2" data-group="${g}">
         ${teams.map((tm, i) => `
           <li draggable="true" data-group="${g}" data-i="${i}"
-              class="group-item flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-grab active:cursor-grabbing transition
+              class="group-item flex items-center gap-2 rounded-lg px-2 py-2 cursor-grab active:cursor-grabbing transition
                      ${i < 2 ? 'bg-acento/10' : i === 2 ? 'bg-white/5' : 'hover:bg-white/5'}">
             <span class="w-4 text-center text-xs font-bold ${rowTone(i)}">${i + 1}</span>
             ${flag(tm, 'w-6')}
             <span class="text-[10px] font-extrabold w-9 text-center px-1 py-0.5 rounded ${i < 2 ? 'bg-acento/25 text-acento' : i === 2 ? 'bg-blue-400/20 text-blue-200' : 'bg-white/10 text-white/60'}">${tm.cod}</span>
-            <span class="text-sm font-semibold truncate ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tName(tm.name)}</span>
-            ${i < 2 ? '<span class="ml-auto text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="ml-auto text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : '<span class="ml-auto text-white/20 flex-shrink-0">⠿</span>'}
+            <span class="text-sm font-semibold truncate flex-1 min-w-0 ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tName(tm.name)}</span>
+            ${i < 2 ? '<span class="text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : ''}
+            <span class="flex flex-col leading-none flex-shrink-0">
+              <button type="button" data-move="up" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 hover:text-acento ${i === 0 ? 'invisible' : ''}">▲</button>
+              <button type="button" data-move="down" data-group="${g}" data-i="${i}" class="px-1.5 py-0.5 text-base text-white/40 hover:text-acento ${i === teams.length - 1 ? 'invisible' : ''}">▼</button>
+            </span>
           </li>`).join('')}
       </ul>
     </div>`).join('');
 }
+
+// Reordena un equipo dentro de su grupo y refresca todo (drag o botones ▲▼).
+function moveInGroup(g, from, to) {
+  const arr = GROUPS[g];
+  if (!arr || from === to || to < 0 || to >= arr.length) return;
+  const [it] = arr.splice(from, 1);
+  arr.splice(to, 0, it);
+  renderGroups(); renderThirds(); resetBracket(); updateBracket(); saveState();
+}
+
+// Botones ▲▼ (funcionan en celular, donde el drag nativo no).
+groupsEl.addEventListener('click', e => {
+  const btn = e.target.closest('[data-move]'); if (!btn) return;
+  const i = +btn.dataset.i;
+  moveInGroup(btn.dataset.group, i, btn.dataset.move === 'up' ? i - 1 : i + 1);
+});
 groupsEl.addEventListener('dragstart', e => {
   const li = e.target.closest('.group-item'); if (!li) return;
   drag = { group: li.dataset.group, index: +li.dataset.i }; li.classList.add('dragging');
@@ -56,9 +76,8 @@ groupsEl.addEventListener('dragover', e => {
 groupsEl.addEventListener('drop', e => {
   e.preventDefault();
   const li = e.target.closest('.group-item'); if (!li || !drag || li.dataset.group !== drag.group) return;
-  const arr = GROUPS[drag.group];
-  const [it] = arr.splice(drag.index, 1); arr.splice(+li.dataset.i, 0, it);
-  drag = null; renderGroups(); renderThirds(); resetBracket(); updateBracket(); saveState();
+  moveInGroup(drag.group, drag.index, +li.dataset.i);
+  drag = null;
 });
 
 // ---------- MEJORES TERCEROS ----------
