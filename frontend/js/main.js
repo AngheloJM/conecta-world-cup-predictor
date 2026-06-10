@@ -13,14 +13,33 @@ function toast(msg, type) {
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 2800);
 }
 
-// ---------- Leaderboard ----------
-function renderLeaderboard() {
-  const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
-  document.getElementById('leaderboard').innerHTML = LEADERBOARD.map(r => `
-    <tr class="hover:bg-white/5 transition">
-      <td class="px-6 py-3 font-bold text-blue-200 w-10">${medal(r.pos)}</td>
-      <td class="px-2 py-3 font-semibold text-white">${r.equipo}</td>
-      <td class="px-6 py-3 text-right font-extrabold text-acento">${r.puntos}</td></tr>`).join('');
+// ---------- Tablero de líderes (real, desde la BD) ----------
+const medalPos = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
+
+async function renderLeaderboard() {
+  const tbody = document.getElementById('leaderboard');
+  let rows;
+  try { rows = await api.getRanking(); } catch (_) { rows = null; }
+
+  if (!rows || !rows.length) {
+    tbody.innerHTML = '<tr><td class="px-6 py-6 text-center text-blue-200 text-sm" colspan="3">Aún no hay jugadores. ¡Sé el primero!</td></tr>';
+    return;
+  }
+
+  const yo = (Auth.user() || {}).id;
+  tbody.innerHTML = rows.map(r => {
+    const esYo = r.id === yo;
+    const nombre = r.nombre_equipo || r.nombre;
+    return `
+    <tr class="transition ${esYo ? 'bg-acento/15' : 'hover:bg-white/5'}">
+      <td class="px-6 py-3 font-bold ${r.pos <= 3 ? 'text-white' : 'text-blue-200'} w-10">${medalPos(r.pos)}</td>
+      <td class="px-2 py-3 font-semibold text-white">
+        ${nombre}${esYo ? '<span class="ml-2 text-[10px] font-bold uppercase text-acento">Tú</span>' : ''}
+        ${r.nombre_equipo ? `<div class="text-[11px] text-blue-200/60 font-normal">${r.nombre}</div>` : ''}
+      </td>
+      <td class="px-6 py-3 text-right font-extrabold text-acento tabular-nums">${r.puntos}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ---------- Pestañas (vistas) ----------
@@ -32,6 +51,7 @@ function showView(name) {
   });
   // El bracket sólo mide bien estando visible: redibuja conectores al entrar al Predictor.
   if (name === 'predictor') requestAnimationFrame(drawConnectors);
+  if (name === 'tablero') renderLeaderboard();   // ranking fresco al abrir
   window.scrollTo({ top: 0 });
 }
 document.getElementById('tabs').addEventListener('click', e => {

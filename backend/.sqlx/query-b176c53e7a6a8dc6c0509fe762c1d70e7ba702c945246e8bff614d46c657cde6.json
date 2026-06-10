@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, nombre, nombre_equipo, puntos_totales\n           FROM usuarios ORDER BY puntos_totales DESC, fecha_registro ASC LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "nombre",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "nombre_equipo",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "puntos_totales",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "b176c53e7a6a8dc6c0509fe762c1d70e7ba702c945246e8bff614d46c657cde6"
+}

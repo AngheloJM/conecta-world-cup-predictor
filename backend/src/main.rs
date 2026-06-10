@@ -127,20 +127,63 @@ async fn health() -> impl IntoResponse {
     (StatusCode::OK, Json(serde_json::json!({ "status": "ok" })))
 }
 
+// ------------------------------------------------------------ Ranking (tabla de posiciones)
+#[derive(Serialize, ToSchema)]
+struct RankRow {
+    pos: i64,
+    id: i64,
+    nombre: String,
+    nombre_equipo: Option<String>,
+    puntos: i32,
+}
+
+#[utoipa::path(get, path = "/ranking", tag = "ranking",
+    responses((status = 200, description = "Tabla de posiciones", body = [RankRow])))]
+async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
+    let rows = sqlx::query!(
+        r#"SELECT id, nombre, nombre_equipo, puntos_totales
+           FROM usuarios ORDER BY puntos_totales DESC, fecha_registro ASC LIMIT 100"#
+    )
+    .fetch_all(&state.pool)
+    .await;
+
+    match rows {
+        Ok(rs) => {
+            let out: Vec<RankRow> = rs
+                .into_iter()
+                .enumerate()
+                .map(|(i, r)| RankRow {
+                    pos: (i as i64) + 1,
+                    id: r.id,
+                    nombre: r.nombre,
+                    nombre_equipo: r.nombre_equipo,
+                    puntos: r.puntos_totales,
+                })
+                .collect();
+            (StatusCode::OK, Json(out)).into_response()
+        }
+        Err(e) => {
+            tracing::error!("ranking error: {e}");
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("Error de base de datos"))).into_response()
+        }
+    }
+}
+
 // ------------------------------------------------------------ Documentación OpenAPI
 #[derive(OpenApi)]
 #[openapi(
     info(title = "Conecta · World Cup Predictor API", version = "0.1.0", description = "API de la polla mundialista: autenticación y apuestas."),
-    paths(auth::register, auth::login, auth::me, sim::guardar, sim::obtener, crear_apuesta, health),
+    paths(auth::register, auth::login, auth::me, sim::guardar, sim::obtener, ranking, crear_apuesta, health),
     components(schemas(
         auth::RegisterReq, auth::LoginReq, auth::AuthResp, auth::UsuarioOut,
-        sim::GuardarSim, sim::SimOut,
+        sim::GuardarSim, sim::SimOut, RankRow,
         ApiError, NuevaApuesta, ApuestaCreada
     )),
     modifiers(&SecurityAddon),
     tags(
         (name = "auth", description = "Registro, login y sesión"),
         (name = "predicciones", description = "Simulación del Mundial del usuario"),
+        (name = "ranking", description = "Tabla de posiciones"),
         (name = "apuestas", description = "Predicciones por partido"),
         (name = "sistema", description = "Salud del servicio")
     )
@@ -205,6 +248,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/me", get(auth::me))
         .route("/simulacion", get(sim::obtener).put(sim::guardar))
         .route("/partidos", get(partidos::listar))
+        .route("/ranking", get(ranking))
         .route("/admin/sync", post(partidos::sync))
         .route("/apuestas", post(crear_apuesta))
         .route("/openapi.json", get(openapi_json))
