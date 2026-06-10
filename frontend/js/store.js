@@ -42,6 +42,8 @@ function applyState(s) {
 
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch (_) {}
+  // Si hay sesión, agenda un guardado en el servidor (debounced; definido en main.js).
+  if (typeof scheduleServerSave === 'function') scheduleServerSave();
 }
 
 function loadState() {

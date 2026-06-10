@@ -47,21 +47,33 @@ function tick() {
 }
 
 // ---------- Guardado de la predicción (local + servidor) ----------
-async function guardarPrediccion() {
-  saveState(); // siempre cachea local
-  if (!Auth.token()) { toast('Guardado localmente'); return; }
+function _simPayload() {
   let sub = null;
   if (S.f && S.sf[0] && S.sf[1]) sub = (S.f === S.sf[0] ? S.sf[1] : S.sf[0]).name;
+  return {
+    campeon_predicho: S.f ? S.f.name : null,
+    subcampeon_predicho: sub,
+    estructura_bracket_json: serializeState(),
+  };
+}
+
+// Guardado explícito (con feedback) — botón "Guardar" / "Enviar".
+async function guardarPrediccion() {
+  if (!Auth.token()) { saveState(); toast('Guardado localmente'); return; }
   try {
-    await api.saveSimulacion({
-      campeon_predicho: S.f ? S.f.name : null,
-      subcampeon_predicho: sub,
-      estructura_bracket_json: serializeState(),
-    });
+    await api.saveSimulacion(_simPayload());
     toast('Predicción guardada en tu cuenta ✓');
   } catch (e) {
     toast('Guardado local; error en servidor: ' + e.message, 'err');
   }
+}
+
+// Auto-guardado silencioso (debounced) ante cualquier cambio (bracket o calendario).
+let _saveTimer = null;
+function scheduleServerSave() {
+  if (!Auth.token()) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => { api.saveSimulacion(_simPayload()).catch(() => {}); }, 900);
 }
 
 // ---------- Formulario del calendario ----------
