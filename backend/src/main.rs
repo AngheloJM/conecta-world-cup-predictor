@@ -2,6 +2,7 @@
 //! Auth (registro/login + JWT), candado de tiempo en apuestas y cálculo de puntos.
 
 mod auth;
+mod partidos;
 mod scoring;
 mod sim;
 
@@ -203,6 +204,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/login", post(auth::login))
         .route("/me", get(auth::me))
         .route("/simulacion", get(sim::obtener).put(sim::guardar))
+        .route("/partidos", get(partidos::listar))
+        .route("/admin/sync", post(partidos::sync))
         .route("/apuestas", post(crear_apuesta))
         .route("/openapi.json", get(openapi_json))
         .route("/docs", get(docs_ui))
