@@ -172,7 +172,7 @@ function drawConnectors() {
   const card = (r, i) => document.querySelector(`[data-card="${r}-${i}"]`);
   const pt = (el, side) => { const r = el.getBoundingClientRect(); return { x: (side === 'r' ? r.right : r.left) - wr.left, y: r.top - wr.top + r.height / 2 }; };
   let d = '';
-  const link = (from, to) => { if (!from || !to) return; const a = pt(from, 'r'), b = pt(to, 'l'), mx = (a.x + b.x) / 2; d += `<path d="M${a.x},${a.y} H${mx} V${b.y} H${b.x}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2"/>`; };
+  const link = (from, to) => { if (!from || !to) return; const a = pt(from, 'r'), b = pt(to, 'l'), mx = (a.x + b.x) / 2; d += `<path d="M${a.x},${a.y} H${mx} V${b.y} H${b.x}" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="2.5" stroke-linejoin="round"/>`; };
   for (let j = 0; j < 8; j++) { link(card('r32', 2*j), card('r16', j)); link(card('r32', 2*j+1), card('r16', j)); }
   for (let j = 0; j < 4; j++) { link(card('r16', 2*j), card('qf', j)); link(card('r16', 2*j+1), card('qf', j)); }
   for (let j = 0; j < 2; j++) { link(card('qf', 2*j), card('sf', j)); link(card('qf', 2*j+1), card('sf', j)); }

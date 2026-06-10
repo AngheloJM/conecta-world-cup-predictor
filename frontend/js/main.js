@@ -18,26 +18,63 @@ const medalPos = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p
 
 async function renderLeaderboard() {
   const tbody = document.getElementById('leaderboard');
+  const podium = document.getElementById('podium');
+  const sub = document.getElementById('tablero-sub');
   let rows;
   try { rows = await api.getRanking(); } catch (_) { rows = null; }
 
   if (!rows || !rows.length) {
-    tbody.innerHTML = '<tr><td class="px-6 py-6 text-center text-blue-200 text-sm" colspan="3">Aún no hay jugadores. ¡Sé el primero!</td></tr>';
+    podium.innerHTML = '';
+    tbody.innerHTML = '<tr><td class="px-6 py-8 text-center text-blue-200 text-sm" colspan="3">Aún no hay jugadores. ¡Sé el primero!</td></tr>';
+    if (sub) sub.textContent = 'Aún no hay jugadores registrados.';
     return;
   }
 
   const yo = (Auth.user() || {}).id;
+  const miFila = rows.find(r => r.id === yo);
+  const nombreDe = r => r.nombre_equipo || r.nombre;
+
+  // Resumen + "mi posición"
+  if (sub) sub.textContent = `${rows.length} ${rows.length === 1 ? 'jugador' : 'jugadores'} en juego.`;
+  const miPuesto = document.getElementById('tablero-mi-puesto');
+  if (miFila && miPuesto) {
+    miPuesto.classList.remove('hidden');
+    document.getElementById('mi-pos').textContent = '#' + miFila.pos;
+    document.getElementById('mi-pts').textContent = miFila.puntos;
+  } else if (miPuesto) {
+    miPuesto.classList.add('hidden');
+  }
+
+  // Podio (top 3)
+  const alturas = ['h-24', 'h-20', 'h-16'];
+  const medallas = ['🥇', '🥈', '🥉'];
+  const orden = [1, 0, 2]; // 2.º, 1.º, 3.º para el efecto podio
+  podium.innerHTML = orden.map(i => {
+    const r = rows[i];
+    if (!r) return '<div></div>';
+    const esYo = r.id === yo;
+    return `
+    <div class="flex flex-col justify-end items-center">
+      <div class="text-3xl mb-1">${medallas[i]}</div>
+      <div class="text-center mb-2">
+        <div class="font-bold text-white text-sm truncate max-w-[9rem]">${nombreDe(r)}${esYo ? ' <span class="text-acento">·Tú</span>' : ''}</div>
+        <div class="text-acento font-extrabold tabular-nums">${r.puntos} pts</div>
+      </div>
+      <div class="w-full ${alturas[i]} rounded-t-xl border-t border-x ${esYo ? 'border-acento bg-acento/15' : 'border-white/10 bg-white/5'} flex items-start justify-center pt-1.5 text-xs font-bold text-blue-200">${r.pos}.º</div>
+    </div>`;
+  }).join('');
+
+  // Tabla completa
   tbody.innerHTML = rows.map(r => {
     const esYo = r.id === yo;
-    const nombre = r.nombre_equipo || r.nombre;
     return `
     <tr class="transition ${esYo ? 'bg-acento/15' : 'hover:bg-white/5'}">
-      <td class="px-6 py-3 font-bold ${r.pos <= 3 ? 'text-white' : 'text-blue-200'} w-10">${medalPos(r.pos)}</td>
-      <td class="px-2 py-3 font-semibold text-white">
-        ${nombre}${esYo ? '<span class="ml-2 text-[10px] font-bold uppercase text-acento">Tú</span>' : ''}
+      <td class="px-6 py-3.5 font-bold ${r.pos <= 3 ? 'text-white' : 'text-blue-200'} w-12">${medalPos(r.pos)}</td>
+      <td class="px-2 py-3.5 font-semibold text-white">
+        ${nombreDe(r)}${esYo ? '<span class="ml-2 text-[10px] font-bold uppercase text-acento">Tú</span>' : ''}
         ${r.nombre_equipo ? `<div class="text-[11px] text-blue-200/60 font-normal">${r.nombre}</div>` : ''}
       </td>
-      <td class="px-6 py-3 text-right font-extrabold text-acento tabular-nums">${r.puntos}</td>
+      <td class="px-6 py-3.5 text-right font-extrabold text-acento tabular-nums text-base">${r.puntos}</td>
     </tr>`;
   }).join('');
 }
@@ -100,8 +137,6 @@ function scheduleServerSave() {
 }
 
 // ---------- Formulario del calendario ----------
-const nombreEl = document.getElementById('nombre');
-nombreEl.addEventListener('input', () => { S.nombre = nombreEl.value; saveState(); });
 document.getElementById('predict-form').addEventListener('submit', e => { e.preventDefault(); guardarPrediccion(); });
 
 // ============================================================  CARGA DE DATOS REALES
@@ -114,7 +149,6 @@ async function bootstrapData() {
   buildGroupsFromPartidos(PARTIDOS);   // 12 grupos reales con escudos
 
   loadState();                          // estado local (si hay), defensivo
-  if (S.nombre) nombreEl.value = S.nombre;
 
   renderGroups();
   renderThirds();
