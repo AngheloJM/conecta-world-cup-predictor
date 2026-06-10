@@ -38,5 +38,6 @@ const api = {
   me: () => apiFetch('/me'),
   getSimulacion: () => apiFetch('/simulacion'),
   saveSimulacion: (body) => apiFetch('/simulacion', { method: 'PUT', body: JSON.stringify(body) }),
-  // Futuro (paso 4): getResultados, getRanking...
+  getPartidos: () => apiFetch('/partidos'),
+  // Futuro (paso 4c): getRanking, getResultados...
 };

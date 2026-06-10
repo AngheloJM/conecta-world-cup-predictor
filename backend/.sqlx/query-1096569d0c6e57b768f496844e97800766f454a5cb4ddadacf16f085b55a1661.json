@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, grupo, fase::text as \"fase!\", fecha_hora,\n                  equipo_local, equipo_visitante, local_cod, visitante_cod,\n                  goles_local, goles_visitante, estado::text as \"estado!\"\n           FROM partidos ORDER BY fecha_hora, id",
+  "query": "SELECT id, grupo, fase::text as \"fase!\", fecha_hora,\n                  equipo_local, equipo_visitante, local_cod, visitante_cod,\n                  crest_local, crest_visitante, venue,\n                  goles_local, goles_visitante, estado::text as \"estado!\"\n           FROM partidos ORDER BY fecha_hora, id",
   "describe": {
     "columns": [
       {
@@ -45,16 +45,31 @@
       },
       {
         "ordinal": 8,
+        "name": "crest_local",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "crest_visitante",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "venue",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
         "name": "goles_local",
         "type_info": "Int2"
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "goles_visitante",
         "type_info": "Int2"
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "estado!",
         "type_info": "Text"
       }
@@ -73,8 +88,11 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
       null
     ]
   },
-  "hash": "ad63f96165e700d70d953ae73acdbe5ce66f7af50b7004942b27c5ecc81055b4"
+  "hash": "1096569d0c6e57b768f496844e97800766f454a5cb4ddadacf16f085b55a1661"
 }

@@ -24,6 +24,7 @@ struct ApiMatch {
     status: String,
     stage: String,
     group: Option<String>,
+    venue: Option<String>,
     #[serde(rename = "homeTeam")]
     home_team: ApiTeam,
     #[serde(rename = "awayTeam")]
@@ -34,6 +35,7 @@ struct ApiMatch {
 struct ApiTeam {
     name: Option<String>,
     tla: Option<String>,
+    crest: Option<String>,
 }
 #[derive(Deserialize)]
 struct ApiScore {
@@ -64,7 +66,6 @@ fn grupo_corto(g: &Option<String>) -> Option<String> {
 
 /// Sincroniza los partidos del Mundial desde football-data.org (solo admin).
 pub async fn sync(user: AuthUser, State(st): State<AppState>) -> impl IntoResponse {
-    // Verificar rol admin.
     let es_admin = sqlx::query_scalar!("SELECT es_admin FROM usuarios WHERE id = $1", user.id)
         .fetch_optional(&st.pool)
         .await
@@ -92,7 +93,6 @@ pub async fn sync(user: AuthUser, State(st): State<AppState>) -> impl IntoRespon
         Ok(r) => return (StatusCode::BAD_GATEWAY, Json(ApiError::new(format!("La API respondió {}", r.status())))).into_response(),
         Err(e) => return (StatusCode::BAD_GATEWAY, Json(ApiError::new(format!("No se pudo contactar la API: {e}")))).into_response(),
     };
-
     let data = match body {
         Ok(d) => d,
         Err(e) => return (StatusCode::BAD_GATEWAY, Json(ApiError::new(format!("Respuesta inválida de la API: {e}")))).into_response(),
@@ -110,12 +110,15 @@ pub async fn sync(user: AuthUser, State(st): State<AppState>) -> impl IntoRespon
         let r = sqlx::query!(
             r#"
             INSERT INTO partidos
-              (external_id, equipo_local, equipo_visitante, local_cod, visitante_cod, fecha_hora, fase, grupo, goles_local, goles_visitante, estado)
-            VALUES ($1,$2,$3,$4,$5,$6,$7::fase_partido,$8,$9,$10,$11::estado_partido)
+              (external_id, equipo_local, equipo_visitante, local_cod, visitante_cod,
+               crest_local, crest_visitante, venue, fecha_hora, fase, grupo,
+               goles_local, goles_visitante, estado)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::fase_partido,$11,$12,$13,$14::estado_partido)
             ON CONFLICT (external_id) DO UPDATE SET
               equipo_local=EXCLUDED.equipo_local, equipo_visitante=EXCLUDED.equipo_visitante,
               local_cod=EXCLUDED.local_cod, visitante_cod=EXCLUDED.visitante_cod,
-              fecha_hora=EXCLUDED.fecha_hora, fase=EXCLUDED.fase, grupo=EXCLUDED.grupo,
+              crest_local=EXCLUDED.crest_local, crest_visitante=EXCLUDED.crest_visitante,
+              venue=EXCLUDED.venue, fecha_hora=EXCLUDED.fecha_hora, fase=EXCLUDED.fase, grupo=EXCLUDED.grupo,
               goles_local=EXCLUDED.goles_local, goles_visitante=EXCLUDED.goles_visitante, estado=EXCLUDED.estado
             "#,
             m.id,
@@ -123,6 +126,9 @@ pub async fn sync(user: AuthUser, State(st): State<AppState>) -> impl IntoRespon
             visit,
             m.home_team.tla.as_deref(),
             m.away_team.tla.as_deref(),
+            m.home_team.crest.as_deref(),
+            m.away_team.crest.as_deref(),
+            m.venue.as_deref(),
             m.utc_date,
             fase as _,
             grupo_corto(&m.group),
@@ -154,6 +160,9 @@ struct PartidoOut {
     equipo_visitante: String,
     local_cod: Option<String>,
     visitante_cod: Option<String>,
+    crest_local: Option<String>,
+    crest_visitante: Option<String>,
+    venue: Option<String>,
     goles_local: Option<i16>,
     goles_visitante: Option<i16>,
     estado: String,
@@ -163,6 +172,7 @@ pub async fn listar(State(st): State<AppState>) -> impl IntoResponse {
     let rows = sqlx::query!(
         r#"SELECT id, grupo, fase::text as "fase!", fecha_hora,
                   equipo_local, equipo_visitante, local_cod, visitante_cod,
+                  crest_local, crest_visitante, venue,
                   goles_local, goles_visitante, estado::text as "estado!"
            FROM partidos ORDER BY fecha_hora, id"#
     )
@@ -182,6 +192,9 @@ pub async fn listar(State(st): State<AppState>) -> impl IntoResponse {
                     equipo_visitante: r.equipo_visitante,
                     local_cod: r.local_cod,
                     visitante_cod: r.visitante_cod,
+                    crest_local: r.crest_local,
+                    crest_visitante: r.crest_visitante,
+                    venue: r.venue,
                     goles_local: r.goles_local,
                     goles_visitante: r.goles_visitante,
                     estado: r.estado,

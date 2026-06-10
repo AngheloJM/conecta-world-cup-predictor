@@ -38,25 +38,7 @@ const R32_SEED = [
   [W('J'), R('I')], [W('L'), R('K')], [R('E'), R('F')], [R('G'), R('H')],
 ];
 
-// Calendario / fixtures de fase de grupos (subconjunto demostrativo)
-const SCHEDULE = [
-  { day: 'Jueves 11 Jun', phase: 'Grupos', items: [
-    { id: 101, group: 'A', time: '15:00', venue: 'Estadio Azteca, CDMX', home: 'Argentina', away: 'México' },
-    { id: 102, group: 'A', time: '18:00', venue: 'Akron, Guadalajara', home: 'Polonia', away: 'Argelia' },
-    { id: 103, group: 'C', time: '21:00', venue: 'MetLife, Nueva Jersey', home: 'España', away: 'Alemania' },
-  ]},
-  { day: 'Viernes 12 Jun', phase: 'Grupos', items: [
-    { id: 201, group: 'B', time: '15:00', venue: 'SoFi, Los Ángeles', home: 'Francia', away: 'Dinamarca' },
-    { id: 202, group: 'D', time: '18:00', venue: 'Mercedes-Benz, Atlanta', home: 'Brasil', away: 'Suiza' },
-    { id: 203, group: 'H', time: '21:00', venue: 'Hard Rock, Miami', home: 'EE.UU.', away: 'Colombia' },
-  ]},
-  { day: 'Sábado 13 Jun', phase: 'Grupos', items: [
-    { id: 301, group: 'E', time: '14:00', venue: 'Lumen Field, Seattle', home: 'Portugal', away: 'Uruguay' },
-    { id: 302, group: 'F', time: '17:00', venue: 'Levi\'s, San Francisco', home: 'Bélgica', away: 'Croacia' },
-    { id: 303, group: 'G', time: '20:00', venue: 'Lincoln Financial, Filadelfia', home: 'P. Bajos', away: 'Ecuador' },
-    { id: 304, group: 'I', time: '23:00', venue: 'Gillette, Boston', home: 'Inglaterra', away: 'Italia' },
-  ]},
-];
+// Fases para el filtro del calendario (los partidos vienen de la API: GET /partidos).
 const PHASES = ['Todas', 'Grupos', 'Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
 
 const LEADERBOARD = [

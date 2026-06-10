@@ -1,61 +1,108 @@
 // ============================================================
-//  CALENDARIO / APUESTAS POR FECHA
-//  Lista los partidos por día con su marcador a predecir.
-//  Depende de: data.js (SCHEDULE, PHASES, flag, teamByName), store.js (S, saveState)
+//  CALENDARIO · partidos reales (GET /partidos de football-data.org)
+//  Depende de: data.js (PHASES), store.js (S, saveState), api.js (api)
 // ============================================================
 
 const calendarEl = document.getElementById('calendar');
 const calPhaseEl = document.getElementById('cal-phase');
 
+let PARTIDOS = [];
+
 // Llena el selector de fases una vez
 calPhaseEl.innerHTML = PHASES.map(p => `<option value="${p}">${p === 'Todas' ? 'Todas las fases' : p}</option>`).join('');
 
-function matchRow(m) {
-  const home = teamByName(m.home), away = teamByName(m.away);
-  const bl = (S.bets[m.id] && S.bets[m.id].l) || '';
-  const bv = (S.bets[m.id] && S.bets[m.id].v) || '';
-  const inp = 'w-10 h-10 text-center font-bold text-white bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento';
+// Trae los partidos del backend (una vez).
+async function loadPartidos() {
+  try {
+    PARTIDOS = await api.getPartidos();
+  } catch (_) {
+    PARTIDOS = [];
+  }
+  renderCalendar();
+}
+
+function crestImg(url, cod) {
+  return url
+    ? `<img src="${url}" class="w-6 h-6 object-contain flex-shrink-0" loading="lazy" alt="${cod || ''}" />`
+    : `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white/10 text-white/70">${cod || '—'}</span>`;
+}
+
+function matchRow(p) {
+  const start = new Date(p.fecha_hora);
+  const finalizado = p.estado === 'Finalizado';
+  const cerrado = finalizado || start <= new Date();
+  const bl = (S.bets[p.id] && S.bets[p.id].l) || '';
+  const bv = (S.bets[p.id] && S.bets[p.id].v) || '';
+  const hora = start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  const etiqueta = p.grupo ? `Grupo ${p.grupo}` : p.fase;
+  const inpCls = 'w-10 h-10 text-center font-bold text-white bg-white/10 border border-white/20 rounded-lg disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento';
+
+  const centro = finalizado
+    ? `<span class="text-acento font-extrabold text-base px-2 tabular-nums">${p.goles_local} - ${p.goles_visitante}</span>`
+    : `<input type="number" min="0" max="20" data-bet="${p.id}" data-side="l" value="${bl}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />
+       <span class="text-white/40 font-bold text-xs">VS</span>
+       <input type="number" min="0" max="20" data-bet="${p.id}" data-side="v" value="${bv}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />`;
+
+  const aviso = finalizado
+    ? '<span class="text-[10px] font-bold text-acento">FINALIZADO</span>'
+    : (cerrado ? '<span class="text-[10px] text-blue-200/60">Cerrado · ya inició</span>' : '');
+
   return `
     <div class="rounded-xl border border-white/10 bg-white/5 p-3">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-[10px] font-bold uppercase tracking-wide text-acento bg-acento/15 rounded px-2 py-0.5">Grupo ${m.group}</span>
-        <span class="text-[11px] text-blue-200/70">${m.time} · ${m.venue}</span>
+        <span class="text-[10px] font-bold uppercase tracking-wide text-acento bg-acento/15 rounded px-2 py-0.5">${etiqueta}</span>
+        <span class="text-[11px] text-blue-200/70 truncate max-w-[55%] text-right">${hora}${p.venue ? ' · ' + p.venue : ''}</span>
       </div>
       <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <div class="flex items-center gap-2 min-w-0">${flag(home, 'w-6')}<span class="text-sm font-semibold text-slate-100 truncate">${home.name}</span></div>
-        <div class="flex items-center gap-1">
-          <input type="number" min="0" max="20" data-bet="${m.id}" data-side="l" value="${bl}" placeholder="0" class="${inp}" />
-          <span class="text-white/40 font-bold text-xs">VS</span>
-          <input type="number" min="0" max="20" data-bet="${m.id}" data-side="v" value="${bv}" placeholder="0" class="${inp}" />
-        </div>
-        <div class="flex items-center gap-2 justify-end min-w-0"><span class="text-sm font-semibold text-slate-100 truncate text-right">${away.name}</span>${flag(away, 'w-6')}</div>
+        <div class="flex items-center gap-2 min-w-0">${crestImg(p.crest_local, p.local_cod)}<span class="text-sm font-semibold text-slate-100 truncate">${p.equipo_local}</span></div>
+        <div class="flex items-center gap-1">${centro}</div>
+        <div class="flex items-center gap-2 justify-end min-w-0"><span class="text-sm font-semibold text-slate-100 truncate text-right">${p.equipo_visitante}</span>${crestImg(p.crest_visitante, p.visitante_cod)}</div>
       </div>
+      ${aviso ? `<div class="text-right mt-1">${aviso}</div>` : ''}
     </div>`;
 }
 
 function renderCalendar() {
+  if (!PARTIDOS.length) {
+    calendarEl.innerHTML = '<p class="text-sm text-blue-200 py-6 text-center">Cargando partidos…</p>';
+    return;
+  }
   const phase = calPhaseEl.value || 'Todas';
-  const days = SCHEDULE.filter(d => phase === 'Todas' || d.phase === phase);
-  if (!days.length) { calendarEl.innerHTML = '<p class="text-sm text-blue-200 py-6 text-center">No hay partidos en esta fase todavía.</p>'; return; }
-  calendarEl.innerHTML = days.map(d => `
+  const list = PARTIDOS.filter(p => phase === 'Todas' || p.fase === phase);
+  if (!list.length) {
+    calendarEl.innerHTML = '<p class="text-sm text-blue-200 py-6 text-center">No hay partidos en esta fase.</p>';
+    return;
+  }
+
+  // Agrupar por día (vienen ordenados por fecha desde el backend).
+  const byDay = new Map();
+  for (const p of list) {
+    const key = new Date(p.fecha_hora).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(p);
+  }
+
+  calendarEl.innerHTML = [...byDay.entries()].map(([day, items]) => `
     <div>
       <div class="flex items-center gap-2 mb-2">
-        <h3 class="text-sm font-extrabold text-white">${d.day}</h3>
-        <span class="text-[10px] font-semibold uppercase tracking-wide text-blue-200 bg-white/5 border border-white/10 rounded px-2 py-0.5">${d.items.length} partidos</span>
+        <h3 class="text-sm font-extrabold text-white capitalize">${day}</h3>
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-blue-200 bg-white/5 border border-white/10 rounded px-2 py-0.5">${items.length} ${items.length === 1 ? 'partido' : 'partidos'}</span>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${d.items.map(matchRow).join('')}</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(matchRow).join('')}</div>
     </div>`).join('');
 }
 
-// Inputs de marcador -> estado + persistencia
+// Inputs de marcador -> estado + persistencia (se auto-guarda en el servidor).
 calendarEl.addEventListener('input', e => {
   const inp = e.target.closest('[data-bet]'); if (!inp) return;
   const id = inp.dataset.bet;
   const cur = S.bets[id] || { l: '', v: '' };
   cur[inp.dataset.side] = inp.value;
-  // No guardar entradas vacías (ambos lados sin valor).
   if (!cur.l && !cur.v) delete S.bets[id];
   else S.bets[id] = cur;
   saveState();
 });
 calPhaseEl.addEventListener('change', renderCalendar);
+
+// Carga inicial.
+loadPartidos();
