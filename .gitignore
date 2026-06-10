@@ -1,0 +1,22 @@
+# Secretos / entorno
+.env
+.env.*.local
+
+# Rust / build
+/backend/target/
+**/target/
+**/*.rs.bk
+
+# Node / frontend (por si se agrega build a futuro)
+node_modules/
+dist/
+.vite/
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
