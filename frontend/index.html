@@ -40,6 +40,13 @@
           <span id="cd-chip" class="text-sm font-extrabold text-white tabular-nums">--</span>
         </div>
         <button id="save-btn" disabled class="bg-acento enabled:hover:bg-orange-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">Guardar</button>
+        <div id="user-area" class="hidden items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <span id="user-name" class="hidden sm:inline text-sm font-semibold text-white"></span>
+          <button id="logout-btn" class="text-blue-200 hover:text-white text-sm font-semibold">Salir</button>
+        </div>
       </div>
     </div>
   </header>
@@ -179,11 +186,45 @@
 
   <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
-  <!-- Módulos (orden importa: datos → estado → predictor → calendario → main) -->
+  <!-- ============ OVERLAY: LOGIN / REGISTRO ============ -->
+  <div id="view-auth" class="hidden fixed inset-0 z-[60] bg-gradient-to-b from-noche via-[#13245A] to-noche2 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-sm bg-white/5 border border-white/10 rounded-card p-6 my-8">
+      <div class="flex items-center justify-center gap-2">
+        <div class="w-9 h-9 rounded-full bg-acento flex items-center justify-center shadow-suave">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-white">Conecta<span class="text-acento">.</span></span>
+      </div>
+      <p class="text-center text-blue-200 text-sm mt-1 mb-5">World Cup Predictor 2026</p>
+
+      <div class="flex bg-white/5 rounded-lg p-1 mb-5">
+        <button type="button" id="tab-login" class="flex-1 py-2 rounded-md text-sm font-bold transition">Ingresar</button>
+        <button type="button" id="tab-register" class="flex-1 py-2 rounded-md text-sm font-bold transition">Registrarse</button>
+      </div>
+
+      <form id="auth-form" class="space-y-3" novalidate>
+        <div id="field-nombre" class="hidden">
+          <input id="auth-nombre" type="text" placeholder="Nombre completo" class="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
+        </div>
+        <input id="auth-email" type="email" required placeholder="Correo electrónico" class="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
+        <input id="auth-password" type="password" required placeholder="Contraseña (mín. 6)" class="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
+        <div id="field-equipo" class="hidden">
+          <input id="auth-equipo" type="text" placeholder="Nombre de tu equipo (opcional)" class="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
+        </div>
+        <p id="auth-error" class="hidden text-red-300 text-sm font-semibold"></p>
+        <button type="submit" id="auth-submit" class="w-full bg-acento hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl shadow-suave transition">Ingresar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Módulos (orden importa: config/api → datos → estado → predictor → calendario → main → auth) -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/store.js"></script>
   <script src="js/predictor.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
