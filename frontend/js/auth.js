@@ -48,7 +48,9 @@ function enterApp(user) {
 }
 
 // Trae la predicción guardada del usuario y la pinta (si existe).
+// Sólo tras terminar habilita el auto-guardado (predReady), para no pisar lo guardado.
 async function loadUserPrediction() {
+  predReady = false;
   try {
     const sim = await api.getSimulacion();
     if (sim && sim.estructura_bracket_json) {
@@ -56,6 +58,7 @@ async function loadUserPrediction() {
       refreshAllFromState();
     }
   } catch (_) { /* sin predicción previa o sin conexión */ }
+  finally { predReady = true; }
 }
 
 tabLogin.addEventListener('click', () => setAuthMode('login'));

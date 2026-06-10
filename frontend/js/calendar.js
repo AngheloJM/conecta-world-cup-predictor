@@ -51,8 +51,11 @@ function renderCalendar() {
 calendarEl.addEventListener('input', e => {
   const inp = e.target.closest('[data-bet]'); if (!inp) return;
   const id = inp.dataset.bet;
-  S.bets[id] = S.bets[id] || { l: '', v: '' };
-  S.bets[id][inp.dataset.side] = inp.value;
+  const cur = S.bets[id] || { l: '', v: '' };
+  cur[inp.dataset.side] = inp.value;
+  // No guardar entradas vacías (ambos lados sin valor).
+  if (!cur.l && !cur.v) delete S.bets[id];
+  else S.bets[id] = cur;
   saveState();
 });
 calPhaseEl.addEventListener('change', renderCalendar);

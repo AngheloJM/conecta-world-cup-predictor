@@ -69,9 +69,12 @@ async function guardarPrediccion() {
 }
 
 // Auto-guardado silencioso (debounced) ante cualquier cambio (bracket o calendario).
+// `predReady` evita guardar ANTES de haber cargado la predicción del servidor
+// (si no, un cambio temprano sobreescribiría lo guardado con un estado vacío).
+let predReady = false;
 let _saveTimer = null;
 function scheduleServerSave() {
-  if (!Auth.token()) return;
+  if (!Auth.token() || !predReady) return;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => { api.saveSimulacion(_simPayload()).catch(() => {}); }, 900);
 }
