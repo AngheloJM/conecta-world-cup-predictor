@@ -20,17 +20,20 @@ Mundial-Rust/
 │
 ├─ backend/              # API REST (Rust · Axum · SQLx)
 │  ├─ src/
-│  │  ├─ main.rs         #   server + endpoint con candado de tiempo
+│  │  ├─ main.rs         #   server, CORS, migraciones, candado de tiempo
+│  │  ├─ auth.rs         #   registro/login (JWT + Argon2) + OpenAPI
 │  │  └─ scoring.rs      #   algoritmo puro de puntos (con tests)
-│  ├─ Cargo.toml
-│  └─ rust-toolchain.toml
+│  ├─ migrations/        #   esquema PostgreSQL (sqlx migrate)
+│  ├─ .sqlx/             #   caché de consultas (build offline en Docker/Railway)
+│  ├─ Dockerfile         #   build para Railway (Linux)
+│  └─ Cargo.toml
 │
-├─ database/             # Esquema PostgreSQL
-│  └─ schema.sql
-│
-├─ docker-compose.yml    # PostgreSQL en Docker (carga schema.sql al iniciar)
+├─ docker-compose.yml    # PostgreSQL en Docker para desarrollo local
+├─ vercel.json           # despliegue del frontend en Vercel
 └─ .env.example          # credenciales / DATABASE_URL
 ```
+
+> Documentación de la API (cuando el backend corre): `http://localhost:3000/docs`
 
 ## 🚀 Cómo correr
 

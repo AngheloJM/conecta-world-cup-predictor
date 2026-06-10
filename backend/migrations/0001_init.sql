@@ -1,9 +1,8 @@
 -- ============================================================
---  PREDICTOR MUNDIALISTA "CONECTA" · Esquema PostgreSQL
---  Compatible con PostgreSQL 13+
+--  PREDICTOR MUNDIALISTA "CONECTA" · Migración inicial
+--  La aplica el backend al arrancar (sqlx::migrate!) y también
+--  docker-compose en local. Compatible con PostgreSQL 13+.
 -- ============================================================
-
-BEGIN;
 
 -- ---------- Tipos ENUM ----------
 DO $$ BEGIN
@@ -86,5 +85,3 @@ CREATE TABLE IF NOT EXISTS simulacion_inicial (
 
   CONSTRAINT uq_simulacion_usuario UNIQUE (usuario_id)
 );
-
-COMMIT;

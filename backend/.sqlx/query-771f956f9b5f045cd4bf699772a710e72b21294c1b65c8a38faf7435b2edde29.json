@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO apuestas_partidos (usuario_id, partido_id, prediccion_local, prediccion_visitante)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (usuario_id, partido_id)\n        DO UPDATE SET prediccion_local = EXCLUDED.prediccion_local,\n                      prediccion_visitante = EXCLUDED.prediccion_visitante,\n                      fecha_apuesta = now()\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int2",
+        "Int2"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "771f956f9b5f045cd4bf699772a710e72b21294c1b65c8a38faf7435b2edde29"
+}

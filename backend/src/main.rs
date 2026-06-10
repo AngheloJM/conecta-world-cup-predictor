@@ -185,6 +185,10 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| "dev-secret-cambiar-en-produccion".into());
 
     let pool = PgPoolOptions::new().max_connections(10).connect(&db_url).await?;
+
+    // Aplica las migraciones al arrancar (crea las tablas si no existen).
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
     let state = AppState { pool, jwt_secret };
 
     // CORS abierto (auth por Bearer token, sin cookies) — restringir origen en producción.
@@ -201,8 +205,10 @@ async fn main() -> anyhow::Result<()> {
         .layer(cors)
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
-    tracing::info!("Servidor escuchando en http://0.0.0.0:3000");
+    // Railway (y la mayoría de PaaS) inyectan el puerto vía la variable PORT.
+    let port = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(3000u16);
+    let listener = tokio::net::TcpListener::bind(("0.0.0.0", port)).await?;
+    tracing::info!("Servidor escuchando en http://0.0.0.0:{port}");
     axum::serve(listener, app).await?;
 
     Ok(())

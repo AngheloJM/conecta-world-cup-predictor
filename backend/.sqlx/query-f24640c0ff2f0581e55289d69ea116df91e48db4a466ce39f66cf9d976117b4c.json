@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, nombre, email, nombre_equipo, es_admin, puntos_totales FROM usuarios WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "nombre",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "nombre_equipo",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "es_admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "puntos_totales",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "f24640c0ff2f0581e55289d69ea116df91e48db4a466ce39f66cf9d976117b4c"
+}
