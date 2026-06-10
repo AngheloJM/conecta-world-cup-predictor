@@ -33,7 +33,7 @@ function renderGroups() {
             <span class="w-4 text-center text-xs font-bold ${rowTone(i)}">${i + 1}</span>
             ${flag(tm, 'w-6')}
             <span class="text-[10px] font-extrabold w-9 text-center px-1 py-0.5 rounded ${i < 2 ? 'bg-acento/25 text-acento' : i === 2 ? 'bg-blue-400/20 text-blue-200' : 'bg-white/10 text-white/60'}">${tm.cod}</span>
-            <span class="text-sm font-semibold truncate ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tm.name}</span>
+            <span class="text-sm font-semibold truncate ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tName(tm.name)}</span>
             ${i < 2 ? '<span class="ml-auto text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="ml-auto text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : '<span class="ml-auto text-white/20 flex-shrink-0">⠿</span>'}
           </li>`).join('')}
       </ul>
@@ -71,7 +71,7 @@ function renderThirds() {
              ${on ? 'border-acento bg-acento/20' : 'border-white/10 bg-white/5 hover:border-white/30'}">
       ${flag(tm, 'w-6')}
       <div class="min-w-0">
-        <div class="text-xs font-bold ${on ? 'text-white' : 'text-blue-100'} truncate">${tm.name}</div>
+        <div class="text-xs font-bold ${on ? 'text-white' : 'text-blue-100'} truncate">${tName(tm.name)}</div>
         <div class="text-[10px] ${on ? 'text-acento' : 'text-blue-300/70'}">3.º Grupo ${g}</div>
       </div>
       ${on ? '<span class="ml-auto text-acento flex-shrink-0">✓</span>' : ''}
@@ -119,7 +119,7 @@ function paintRow(btn, team, picked, disabled, isThird) {
   if (btn._key !== key) {
     btn._key = key;
     btn.innerHTML = team
-      ? `${flag(team, 'w-5')}<span class="truncate">${team.name}</span>`
+      ? `${flag(team, 'w-5')}<span class="truncate">${tName(team.name)}</span>`
       : (isThird ? '<span class="text-amber-300 mr-1">★</span><span class="text-white/30">Mejor 3.º</span>' : '<span class="text-white/30">Por definir</span>');
   }
   btn.disabled = disabled;
@@ -146,7 +146,7 @@ function updateBracket() {
   paintCard('fn', 0, fa, fb, S.f ? (S.f === fa ? 'a' : 'b') : null);
   const cf = document.querySelector('[data-card="champ-0"]');
   cf.querySelector('.champ-flag').innerHTML = S.f ? flag(S.f, 'w-10') : '<span class="text-3xl">🏆</span>';
-  cf.querySelector('.champ-name').textContent = S.f ? S.f.name : '—';
+  cf.querySelector('.champ-name').textContent = S.f ? tName(S.f.name) : '—';
   updateProgress();
 }
 
@@ -195,7 +195,7 @@ function updateProgress() {
     if (lastChampFired !== S.f.name) {
       lastChampFired = S.f.name;
       if (window.confetti) confetti({ particleCount: 130, spread: 80, origin: { y: 0.3 }, colors: ['#FF6B00', '#1A3B8B', '#ffffff'] });
-      toast(`🏆 ${S.f.name} es tu campeón`, 'win');
+      toast(`🏆 ${tName(S.f.name)} es tu campeón`, 'win');
     }
   } else {
     const need8 = S.thirds.size !== 8;

@@ -61,6 +61,25 @@ const LEADERBOARD = [
   { pos: 5, equipo: 'Conecta Stars', puntos: 97 },
 ];
 
+// Traducción de nombres (la API los da en inglés). Solo para mostrar; las
+// claves internas (NAME2TEAM, guardado) siguen en el nombre original.
+const ES = {
+  'Mexico': 'México', 'South Africa': 'Sudáfrica', 'South Korea': 'Corea del Sur', 'Czechia': 'Chequia',
+  'Canada': 'Canadá', 'Switzerland': 'Suiza', 'Qatar': 'Catar', 'Bosnia-Herzegovina': 'Bosnia y H.',
+  'Brazil': 'Brasil', 'Morocco': 'Marruecos', 'Scotland': 'Escocia', 'Haiti': 'Haití',
+  'Australia': 'Australia', 'Paraguay': 'Paraguay', 'Turkey': 'Turquía', 'United States': 'EE.UU.',
+  'Germany': 'Alemania', 'Ecuador': 'Ecuador', 'Ivory Coast': 'Costa de Marfil', 'Curaçao': 'Curazao',
+  'Japan': 'Japón', 'Netherlands': 'Países Bajos', 'Sweden': 'Suecia', 'Tunisia': 'Túnez',
+  'Belgium': 'Bélgica', 'Egypt': 'Egipto', 'Iran': 'Irán', 'New Zealand': 'Nueva Zelanda',
+  'Cape Verde Islands': 'Cabo Verde', 'Saudi Arabia': 'Arabia Saudita', 'Spain': 'España', 'Uruguay': 'Uruguay',
+  'France': 'Francia', 'Iraq': 'Irak', 'Norway': 'Noruega', 'Senegal': 'Senegal',
+  'Algeria': 'Argelia', 'Argentina': 'Argentina', 'Austria': 'Austria', 'Jordan': 'Jordania',
+  'Colombia': 'Colombia', 'Congo DR': 'Congo RD', 'Portugal': 'Portugal', 'Uzbekistan': 'Uzbekistán',
+  'Croatia': 'Croacia', 'England': 'Inglaterra', 'Ghana': 'Ghana', 'Panama': 'Panamá',
+  'Por definir': 'Por definir',
+};
+function tName(n) { return ES[n] || n; }
+
 // Escudo oficial del equipo (de la API). Acepta {crest, cod, name}.
 function flag(tm, cls) {
   cls = cls || 'w-5';

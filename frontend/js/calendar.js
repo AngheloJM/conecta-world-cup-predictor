@@ -23,13 +23,17 @@ function matchRow(p) {
   const bv = (S.bets[p.id] && S.bets[p.id].v) || '';
   const hora = start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   const etiqueta = p.grupo ? `Grupo ${p.grupo}` : p.fase;
-  const inpCls = 'w-10 h-10 text-center font-bold text-white bg-white/10 border border-white/20 rounded-lg disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento';
+  const inpCls = 'w-10 h-9 text-center font-bold text-white bg-white/10 border border-white/20 rounded-lg disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento';
 
-  const centro = finalizado
-    ? `<span class="text-acento font-extrabold text-base px-2 tabular-nums">${p.goles_local} - ${p.goles_visitante}</span>`
-    : `<input type="number" min="0" max="20" data-bet="${p.id}" data-side="l" value="${bl}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />
-       <span class="text-white/40 font-bold text-xs">VS</span>
-       <input type="number" min="0" max="20" data-bet="${p.id}" data-side="v" value="${bv}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />`;
+  // Una fila por equipo (estilo fixture): escudo + nombre (ancho completo) + marcador.
+  const fila = (name, crest, cod, side, goles, bet) => `
+    <div class="flex items-center gap-2">
+      ${crestImg(crest, cod)}
+      <span class="text-sm font-semibold text-slate-100 flex-1 min-w-0 truncate">${name}</span>
+      ${finalizado
+        ? `<span class="w-9 text-center font-extrabold text-acento tabular-nums">${goles}</span>`
+        : `<input type="number" min="0" max="20" data-bet="${p.id}" data-side="${side}" value="${bet}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />`}
+    </div>`;
 
   const aviso = finalizado
     ? '<span class="text-[10px] font-bold text-acento">FINALIZADO</span>'
@@ -41,12 +45,11 @@ function matchRow(p) {
         <span class="text-[10px] font-bold uppercase tracking-wide text-acento bg-acento/15 rounded px-2 py-0.5">${etiqueta}</span>
         <span class="text-[11px] text-blue-200/70 truncate max-w-[55%] text-right">${hora}${p.venue ? ' · ' + p.venue : ''}</span>
       </div>
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <div class="flex items-center gap-2 min-w-0">${crestImg(p.crest_local, p.local_cod)}<span class="text-sm font-semibold text-slate-100 truncate">${p.equipo_local}</span></div>
-        <div class="flex items-center gap-1">${centro}</div>
-        <div class="flex items-center gap-2 justify-end min-w-0"><span class="text-sm font-semibold text-slate-100 truncate text-right">${p.equipo_visitante}</span>${crestImg(p.crest_visitante, p.visitante_cod)}</div>
+      <div class="space-y-1.5">
+        ${fila(tName(p.equipo_local), p.crest_local, p.local_cod, 'l', p.goles_local, bl)}
+        ${fila(tName(p.equipo_visitante), p.crest_visitante, p.visitante_cod, 'v', p.goles_visitante, bv)}
       </div>
-      ${aviso ? `<div class="text-right mt-1">${aviso}</div>` : ''}
+      ${aviso ? `<div class="text-right mt-1.5">${aviso}</div>` : ''}
     </div>`;
 }
 
