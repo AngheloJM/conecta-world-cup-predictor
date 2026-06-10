@@ -6,4 +6,4 @@
 const API_BASE =
   (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:')
     ? 'http://localhost:3000'
-    : 'https://TU-BACKEND.up.railway.app'; // ← cambiar tras desplegar en Railway
+    : 'https://wordcupback-production.up.railway.app'; // backend desplegado en Railway
