@@ -1,77 +1,77 @@
 //! Polla Mundialista "Conecta" · Backend Axum.
-//! Resuelve los dos cuellos de botella críticos:
-//!   1) Candado de apuestas por tiempo (POST /apuestas)
-//!   2) Algoritmo puro de cálculo de puntos (módulo `scoring`)
+//! Auth (registro/login + JWT), candado de tiempo en apuestas y cálculo de puntos.
 
+mod auth;
 mod scoring;
 
 use axum::{
     extract::State,
     http::StatusCode,
-    response::IntoResponse,
-    routing::post,
+    response::{Html, IntoResponse},
+    routing::{get, post},
     Json, Router,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use tower_http::cors::{Any, CorsLayer};
+use utoipa::{OpenApi, ToSchema};
 
-// ------------------------------------------------------------
-// Estado compartido
-// ------------------------------------------------------------
+use auth::AuthUser;
+
+// ------------------------------------------------------------ Estado y error compartidos
 #[derive(Clone)]
-struct AppState {
-    pool: PgPool,
+pub struct AppState {
+    pub pool: PgPool,
+    pub jwt_secret: String,
 }
 
-// ------------------------------------------------------------
-// DTOs
-// ------------------------------------------------------------
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApiError {
+    pub error: String,
+}
+impl ApiError {
+    pub fn new(msg: impl Into<String>) -> Self {
+        Self { error: msg.into() }
+    }
+}
+
+// ------------------------------------------------------------ Apuesta por partido (candado de tiempo)
+#[derive(Debug, Deserialize, ToSchema)]
 struct NuevaApuesta {
-    usuario_id: i64,
     partido_id: i64,
     prediccion_local: i16,
     prediccion_visitante: i16,
 }
 
-#[derive(Debug, Serialize)]
-struct ApiError {
-    error: String,
-}
-
-impl ApiError {
-    fn new(msg: impl Into<String>) -> Self {
-        Self { error: msg.into() }
-    }
-}
-
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 struct ApuestaCreada {
     id: i64,
     mensaje: String,
 }
 
-// ------------------------------------------------------------
-// 1. ENDPOINT: Candado de apuestas por tiempo
-// ------------------------------------------------------------
+#[utoipa::path(
+    post, path = "/apuestas", tag = "apuestas",
+    security(("bearerAuth" = [])),
+    request_body = NuevaApuesta,
+    responses(
+        (status = 200, description = "Apuesta guardada", body = ApuestaCreada),
+        (status = 400, description = "Apuesta cerrada o inválida", body = ApiError),
+        (status = 404, description = "Partido no encontrado", body = ApiError),
+    )
+)]
 async fn crear_apuesta(
+    user: AuthUser,
     State(state): State<AppState>,
     Json(body): Json<NuevaApuesta>,
 ) -> impl IntoResponse {
-    // Validación básica de marcador.
     if body.prediccion_local < 0 || body.prediccion_visitante < 0 {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(ApiError::new("El marcador no puede ser negativo")),
-        )
-            .into_response();
+        return (StatusCode::BAD_REQUEST, Json(ApiError::new("El marcador no puede ser negativo"))).into_response();
     }
 
-    // Trae la fecha de inicio y estado del partido.
     let partido = sqlx::query!(
-        r#"SELECT fecha_hora, estado AS "estado: String" FROM partidos WHERE id = $1"#,
+        r#"SELECT fecha_hora FROM partidos WHERE id = $1"#,
         body.partido_id
     )
     .fetch_optional(&state.pool)
@@ -79,44 +79,31 @@ async fn crear_apuesta(
 
     let partido = match partido {
         Ok(Some(p)) => p,
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(ApiError::new("Partido no encontrado")),
-            )
-                .into_response();
-        }
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError::new("Partido no encontrado"))).into_response(),
         Err(e) => {
             tracing::error!("DB error: {e}");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ApiError::new("Error de base de datos")),
-            )
-                .into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("Error de base de datos"))).into_response();
         }
     };
 
     // ----- CANDADO: el partido no debe haber iniciado -----
     let ahora: DateTime<Utc> = Utc::now();
     if ahora >= partido.fecha_hora {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(ApiError::new(
-                "Las apuestas están cerradas: el partido ya inició",
-            )),
-        )
-            .into_response();
+        return (StatusCode::BAD_REQUEST, Json(ApiError::new("Las apuestas están cerradas: el partido ya inició"))).into_response();
     }
 
-    // Inserta respetando el UNIQUE(usuario_id, partido_id) del esquema.
+    // Upsert: permite modificar la apuesta mientras no haya iniciado el partido.
     let inserted = sqlx::query!(
         r#"
-        INSERT INTO apuestas_partidos
-            (usuario_id, partido_id, prediccion_local, prediccion_visitante)
+        INSERT INTO apuestas_partidos (usuario_id, partido_id, prediccion_local, prediccion_visitante)
         VALUES ($1, $2, $3, $4)
+        ON CONFLICT (usuario_id, partido_id)
+        DO UPDATE SET prediccion_local = EXCLUDED.prediccion_local,
+                      prediccion_visitante = EXCLUDED.prediccion_visitante,
+                      fecha_apuesta = now()
         RETURNING id
         "#,
-        body.usuario_id,
+        user.id,
         body.partido_id,
         body.prediccion_local,
         body.prediccion_visitante,
@@ -125,50 +112,93 @@ async fn crear_apuesta(
     .await;
 
     match inserted {
-        Ok(row) => (
-            StatusCode::CREATED,
-            Json(ApuestaCreada {
-                id: row.id,
-                mensaje: "Apuesta registrada".into(),
-            }),
-        )
-            .into_response(),
-        // Violación de UNIQUE -> apuesta duplicada.
-        Err(sqlx::Error::Database(db)) if db.constraint() == Some("uq_usuario_partido") => (
-            StatusCode::CONFLICT,
-            Json(ApiError::new("Ya apostaste en este partido")),
-        )
-            .into_response(),
+        Ok(row) => (StatusCode::OK, Json(ApuestaCreada { id: row.id, mensaje: "Apuesta guardada".into() })).into_response(),
         Err(e) => {
             tracing::error!("DB insert error: {e}");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ApiError::new("No se pudo registrar la apuesta")),
-            )
-                .into_response()
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("No se pudo registrar la apuesta"))).into_response()
         }
     }
 }
 
-// ------------------------------------------------------------
-// Bootstrap
-// ------------------------------------------------------------
+#[utoipa::path(get, path = "/health", tag = "sistema", responses((status = 200, description = "Servicio operativo")))]
+async fn health() -> impl IntoResponse {
+    (StatusCode::OK, Json(serde_json::json!({ "status": "ok" })))
+}
+
+// ------------------------------------------------------------ Documentación OpenAPI
+#[derive(OpenApi)]
+#[openapi(
+    info(title = "Conecta · World Cup Predictor API", version = "0.1.0", description = "API de la polla mundialista: autenticación y apuestas."),
+    paths(auth::register, auth::login, auth::me, crear_apuesta, health),
+    components(schemas(
+        auth::RegisterReq, auth::LoginReq, auth::AuthResp, auth::UsuarioOut,
+        ApiError, NuevaApuesta, ApuestaCreada
+    )),
+    modifiers(&SecurityAddon),
+    tags(
+        (name = "auth", description = "Registro, login y sesión"),
+        (name = "apuestas", description = "Predicciones por partido"),
+        (name = "sistema", description = "Salud del servicio")
+    )
+)]
+struct ApiDoc;
+
+struct SecurityAddon;
+impl utoipa::Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "bearerAuth",
+                SecurityScheme::Http(
+                    HttpBuilder::new().scheme(HttpAuthScheme::Bearer).bearer_format("JWT").build(),
+                ),
+            );
+        }
+    }
+}
+
+async fn openapi_json() -> impl IntoResponse {
+    Json(ApiDoc::openapi())
+}
+
+/// UI de documentación (Scalar) cargada por CDN — sin descargas en build.
+async fn docs_ui() -> impl IntoResponse {
+    Html(
+        r#"<!doctype html>
+<html><head><meta charset="utf-8" /><title>API · Conecta Predictor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+<body><script id="api-reference" data-url="/openapi.json"></script>
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+</body></html>"#,
+    )
+}
+
+// ------------------------------------------------------------ Bootstrap
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let db_url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/conecta".into());
+    let jwt_secret = std::env::var("JWT_SECRET")
+        .unwrap_or_else(|_| "dev-secret-cambiar-en-produccion".into());
 
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&db_url)
-        .await?;
+    let pool = PgPoolOptions::new().max_connections(10).connect(&db_url).await?;
+    let state = AppState { pool, jwt_secret };
 
-    let state = AppState { pool };
+    // CORS abierto (auth por Bearer token, sin cookies) — restringir origen en producción.
+    let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
 
     let app = Router::new()
+        .route("/health", get(health))
+        .route("/auth/register", post(auth::register))
+        .route("/auth/login", post(auth::login))
+        .route("/me", get(auth::me))
         .route("/apuestas", post(crear_apuesta))
+        .route("/openapi.json", get(openapi_json))
+        .route("/docs", get(docs_ui))
+        .layer(cors)
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
