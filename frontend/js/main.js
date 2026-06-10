@@ -84,9 +84,16 @@ const nombreEl = document.getElementById('nombre');
 nombreEl.addEventListener('input', () => { S.nombre = nombreEl.value; saveState(); });
 document.getElementById('predict-form').addEventListener('submit', e => { e.preventDefault(); guardarPrediccion(); });
 
-// ============================================================  INIT
-(function init() {
-  const had = loadState();
+// ============================================================  CARGA DE DATOS REALES
+// Promesa que resuelve cuando los grupos reales están construidos y pintados.
+let _dataResolve;
+const dataReadyPromise = new Promise(r => { _dataResolve = r; });
+
+async function bootstrapData() {
+  try { PARTIDOS = await api.getPartidos(); } catch (_) { PARTIDOS = []; }
+  buildGroupsFromPartidos(PARTIDOS);   // 12 grupos reales con escudos
+
+  loadState();                          // estado local (si hay), defensivo
   if (S.nombre) nombreEl.value = S.nombre;
 
   renderGroups();
@@ -95,9 +102,14 @@ document.getElementById('predict-form').addEventListener('submit', e => { e.prev
   updateBracket();
   requestAnimationFrame(drawConnectors);
   renderCalendar();
-  renderLeaderboard();
 
+  _dataResolve();                       // habilita la carga de la predicción del usuario
+}
+
+// ============================================================  INIT
+(function init() {
+  renderLeaderboard();
   tick();
   setInterval(tick, 1000);
-  if (had) toast('Recuperamos tu predicción anterior');
+  bootstrapData();
 })();

@@ -52,6 +52,7 @@ function enterApp(user) {
 async function loadUserPrediction() {
   predReady = false;
   try {
+    await dataReadyPromise;          // espera a que los grupos reales estén construidos
     const sim = await api.getSimulacion();
     if (sim && sim.estructura_bracket_json) {
       applyState(sim.estructura_bracket_json);

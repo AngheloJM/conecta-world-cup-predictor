@@ -1,33 +1,47 @@
 // ============================================================
 //  DATOS Y HELPERS PUROS (sin DOM)
-//  Mundial 2026: 48 equipos · 12 grupos
+//  Mundial 2026: 48 equipos · 12 grupos · datos REALES de la API
 // ============================================================
 
-const STORAGE_KEY = 'conecta_predictor_2026_v1';
+const STORAGE_KEY = 'conecta_predictor_2026_v2';
 const DEADLINE = new Date('2026-06-12T11:00:00');
 
-function t(name, iso, abbr) { return { name, iso, abbr }; }
-
-const GROUPS = {
-  A: [t('Argentina','ar','ARG'), t('México','mx','MEX'), t('Polonia','pl','POL'), t('Argelia','dz','ALG')],
-  B: [t('Francia','fr','FRA'), t('Dinamarca','dk','DEN'), t('Túnez','tn','TUN'), t('Australia','au','AUS')],
-  C: [t('España','es','ESP'), t('Alemania','de','GER'), t('Japón','jp','JPN'), t('Costa Rica','cr','CRC')],
-  D: [t('Brasil','br','BRA'), t('Suiza','ch','SUI'), t('Serbia','rs','SRB'), t('Camerún','cm','CMR')],
-  E: [t('Portugal','pt','POR'), t('Uruguay','uy','URU'), t('Corea S.','kr','KOR'), t('Ghana','gh','GHA')],
-  F: [t('Bélgica','be','BEL'), t('Croacia','hr','CRO'), t('Marruecos','ma','MAR'), t('Canadá','ca','CAN')],
-  G: [t('P. Bajos','nl','NED'), t('Ecuador','ec','ECU'), t('Senegal','sn','SEN'), t('Catar','qa','QAT')],
-  H: [t('Nigeria','ng','NGA'), t('EE.UU.','us','USA'), t('Irán','ir','IRN'), t('Colombia','co','COL')],
-  I: [t('Inglaterra','gb-eng','ENG'), t('Italia','it','ITA'), t('Egipto','eg','EGY'), t('Perú','pe','PER')],
-  J: [t('Chile','cl','CHI'), t('Suecia','se','SWE'), t('C. Marfil','ci','CIV'), t('Arabia S.','sa','KSA')],
-  K: [t('Escocia','gb-sct','SCO'), t('Noruega','no','NOR'), t('Paraguay','py','PAR'), t('Jamaica','jm','JAM')],
-  L: [t('Turquía','tr','TUR'), t('Grecia','gr','GRE'), t('Venezuela','ve','VEN'), t('Honduras','hn','HON')],
-};
-const GLETTERS = Object.keys(GROUPS);
-
-// Mapa nombre -> equipo (para reconstruir desde localStorage y fixtures)
+// Grupos (se construyen desde los partidos reales: buildGroupsFromPartidos).
+const GROUPS = {};
+let GLETTERS = [];
 const NAME2TEAM = {};
-Object.values(GROUPS).flat().forEach(tm => NAME2TEAM[tm.name] = tm);
 function teamByName(n) { return NAME2TEAM[n] || null; }
+
+// Partidos reales (cargados de GET /partidos).
+let PARTIDOS = [];
+
+// Construye los 12 grupos (con equipos reales {name, cod, crest}) a partir de los
+// partidos de fase de grupos. El orden inicial es alfabético; el usuario reordena.
+function buildGroupsFromPartidos(partidos) {
+  for (const k in GROUPS) delete GROUPS[k];
+  for (const k in NAME2TEAM) delete NAME2TEAM[k];
+
+  const tmp = {};
+  const lados = [
+    ['equipo_local', 'local_cod', 'crest_local'],
+    ['equipo_visitante', 'visitante_cod', 'crest_visitante'],
+  ];
+  for (const p of partidos) {
+    if (p.fase !== 'Grupos' || !p.grupo) continue;
+    for (const [nk, ck, crk] of lados) {
+      const name = p[nk];
+      if (!name || name === 'Por definir') continue;
+      tmp[p.grupo] = tmp[p.grupo] || new Map();
+      if (!tmp[p.grupo].has(name)) tmp[p.grupo].set(name, { name, cod: p[ck] || '', crest: p[crk] || '' });
+    }
+  }
+
+  GLETTERS = Object.keys(tmp).sort();
+  for (const g of GLETTERS) {
+    GROUPS[g] = [...tmp[g].values()].sort((a, b) => a.name.localeCompare(b.name));
+    GROUPS[g].forEach(tm => { NAME2TEAM[tm.name] = tm; });
+  }
+}
 
 // Ronda de 32 (16 partidos): W=1.º, R=2.º, T=mejor tercero(i)
 const W = g => ({ k: 'W', g }), R = g => ({ k: 'R', g }), T = i => ({ k: 'T', i });
@@ -38,7 +52,7 @@ const R32_SEED = [
   [W('J'), R('I')], [W('L'), R('K')], [R('E'), R('F')], [R('G'), R('H')],
 ];
 
-// Fases para el filtro del calendario (los partidos vienen de la API: GET /partidos).
+// Fases para el filtro del calendario.
 const PHASES = ['Todas', 'Grupos', 'Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinal', 'Final'];
 
 const LEADERBOARD = [
@@ -47,10 +61,10 @@ const LEADERBOARD = [
   { pos: 5, equipo: 'Conecta Stars', puntos: 97 },
 ];
 
-// Helper de bandera (flagcdn) — robusto ante el emoji roto de Windows
+// Escudo oficial del equipo (de la API). Acepta {crest, cod, name}.
 function flag(tm, cls) {
   cls = cls || 'w-5';
-  return tm && tm.iso
-    ? `<img src="https://flagcdn.com/w40/${tm.iso}.png" class="${cls} h-auto rounded-[2px] shadow-sm flex-shrink-0" alt="${tm.name}" loading="lazy" decoding="async" />`
-    : '';
+  return tm && tm.crest
+    ? `<img src="${tm.crest}" class="${cls} aspect-square object-contain flex-shrink-0" alt="${tm.name}" loading="lazy" />`
+    : (tm && tm.cod ? `<span class="text-[10px] font-extrabold px-1 rounded bg-white/10">${tm.cod}</span>` : '');
 }

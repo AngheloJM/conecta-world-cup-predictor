@@ -6,20 +6,8 @@
 const calendarEl = document.getElementById('calendar');
 const calPhaseEl = document.getElementById('cal-phase');
 
-let PARTIDOS = [];
-
-// Llena el selector de fases una vez
+// Llena el selector de fases una vez (PARTIDOS se carga en main.js → bootstrapData).
 calPhaseEl.innerHTML = PHASES.map(p => `<option value="${p}">${p === 'Todas' ? 'Todas las fases' : p}</option>`).join('');
-
-// Trae los partidos del backend (una vez).
-async function loadPartidos() {
-  try {
-    PARTIDOS = await api.getPartidos();
-  } catch (_) {
-    PARTIDOS = [];
-  }
-  renderCalendar();
-}
 
 function crestImg(url, cod) {
   return url
@@ -103,6 +91,3 @@ calendarEl.addEventListener('input', e => {
   saveState();
 });
 calPhaseEl.addEventListener('change', renderCalendar);
-
-// Carga inicial.
-loadPartidos();

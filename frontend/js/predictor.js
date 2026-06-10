@@ -32,7 +32,7 @@ function renderGroups() {
                      ${i < 2 ? 'bg-acento/10' : i === 2 ? 'bg-white/5' : 'hover:bg-white/5'}">
             <span class="w-4 text-center text-xs font-bold ${rowTone(i)}">${i + 1}</span>
             ${flag(tm, 'w-6')}
-            <span class="text-[10px] font-extrabold w-9 text-center px-1 py-0.5 rounded ${i < 2 ? 'bg-acento/25 text-acento' : i === 2 ? 'bg-blue-400/20 text-blue-200' : 'bg-white/10 text-white/60'}">${tm.abbr}</span>
+            <span class="text-[10px] font-extrabold w-9 text-center px-1 py-0.5 rounded ${i < 2 ? 'bg-acento/25 text-acento' : i === 2 ? 'bg-blue-400/20 text-blue-200' : 'bg-white/10 text-white/60'}">${tm.cod}</span>
             <span class="text-sm font-semibold truncate ${i < 2 ? 'text-white' : i === 2 ? 'text-blue-100' : 'text-white/55'}">${tm.name}</span>
             ${i < 2 ? '<span class="ml-auto text-[9px] font-bold text-acento flex-shrink-0">CLASIF</span>' : i === 2 ? '<span class="ml-auto text-[9px] font-bold text-blue-300 flex-shrink-0">3.º</span>' : '<span class="ml-auto text-white/20 flex-shrink-0">⠿</span>'}
           </li>`).join('')}
@@ -190,7 +190,7 @@ function updateProgress() {
   document.getElementById('progress-text').textContent = pct + '%';
   const saveBtn = document.getElementById('save-btn');
   if (S.f) {
-    document.getElementById('progress-state').innerHTML = `<span class="text-acento">¡Campeón: ${S.f.abbr}! Listo para guardar</span>`;
+    document.getElementById('progress-state').innerHTML = `<span class="text-acento">¡Campeón: ${S.f.cod || S.f.name}! Listo para guardar</span>`;
     saveBtn.disabled = false;
     if (lastChampFired !== S.f.name) {
       lastChampFired = S.f.name;

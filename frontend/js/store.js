@@ -33,7 +33,13 @@ function serializeState() {
 // Aplica un objeto plano al estado S (reconstruye equipos por nombre).
 function applyState(s) {
   if (!s) return;
-  if (s.groups) for (const g in s.groups) if (GROUPS[g]) GROUPS[g] = s.groups[g].map(n => NAME2TEAM[n]).filter(Boolean);
+  // Reordena cada grupo SOLO si todos los nombres guardados coinciden con los
+  // equipos reales (evita corromper grupos si el guardado es de datos viejos).
+  if (s.groups) for (const g in s.groups) {
+    if (!GROUPS[g]) continue;
+    const reordenado = s.groups[g].map(n => NAME2TEAM[n]).filter(Boolean);
+    if (reordenado.length === GROUPS[g].length) GROUPS[g] = reordenado;
+  }
   S.thirds = new Set(s.thirds || []);
   const map = (arr, n) => { const r = (arr || []).map(x => x ? NAME2TEAM[x] : null); while (r.length < n) r.push(null); return r; };
   S.r32 = map(s.r32, 16); S.r16 = map(s.r16, 8); S.qf = map(s.qf, 4); S.sf = map(s.sf, 2);
