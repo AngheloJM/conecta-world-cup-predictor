@@ -17,7 +17,7 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .toast { animation: toastIn .25s ease; }
 
-/* Pestañas de navegación entre vistas */
-.tab-btn { color: #64748b; border-bottom: 2px solid transparent; }
-.tab-btn:hover { color: #1A3B8B; }
-.tab-active { color: #1A3B8B; border-bottom-color: #FF6B00; }
+/* Pestañas de navegación entre vistas (tema oscuro) */
+.tab-btn { color: #bfdbfe; border-bottom: 2px solid transparent; }
+.tab-btn:hover { color: #ffffff; }
+.tab-active { color: #ffffff; border-bottom-color: #FF6B00; }

@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="bg-fondo text-slate-800 antialiased">
+<body class="bg-noche text-slate-200 antialiased">
 
   <!-- NAVBAR -->
   <header class="bg-noche text-white sticky top-0 z-30 border-b border-white/10">
@@ -45,7 +45,7 @@
   </header>
 
   <!-- BARRA DE PESTAÑAS -->
-  <nav class="bg-white border-b border-borde sticky top-16 z-20">
+  <nav class="bg-noche border-b border-white/10 sticky top-16 z-20">
     <div id="tabs" class="max-w-7xl mx-auto px-4 lg:px-6 flex gap-1">
       <button data-view="predictor" class="tab-btn tab-active flex items-center gap-2 px-4 py-3 text-sm font-bold transition">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L23 12l-5.714 2.143L15 21l-2.286-6.857L7 12l5.714-2.143L15 3z"/></svg>
@@ -143,18 +143,18 @@
   </div>
 
   <!-- ============ VISTA: CALENDARIO ============ -->
-  <div id="view-calendario" class="hidden min-h-screen">
+  <div id="view-calendario" class="hidden min-h-screen bg-gradient-to-b from-noche via-[#13245A] to-noche2">
     <div class="max-w-3xl mx-auto px-4 lg:px-6 py-8">
-      <form id="predict-form" class="bg-white rounded-card border-2 border-acento shadow-suave overflow-hidden">
-        <div class="px-6 py-4 border-b border-borde flex items-center justify-between gap-3 flex-wrap">
+      <form id="predict-form" class="bg-white/5 rounded-card border border-white/10 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h2 class="text-marca font-extrabold text-lg">Calendario · Apuesta por Fecha</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Predice el marcador exacto de cada partido.</p>
+            <h2 class="text-white font-extrabold text-lg">Calendario · Apuesta por Fecha</h2>
+            <p class="text-xs text-blue-200 mt-0.5">Predice el marcador exacto de cada partido.</p>
           </div>
-          <select id="cal-phase" class="bg-fondo border border-borde rounded-lg text-sm font-semibold text-marca px-3 py-2 focus:outline-none focus:ring-2 focus:ring-acento/40"></select>
+          <select id="cal-phase" class="bg-white/10 border border-white/20 rounded-lg text-sm font-semibold text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-acento/40 [&>option]:text-slate-800"></select>
         </div>
         <div class="p-6 space-y-5">
-          <input id="nombre" name="nombre" type="text" required placeholder="Tu nombre completo" class="w-full bg-fondo border border-borde rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
+          <input id="nombre" name="nombre" type="text" required placeholder="Tu nombre completo" class="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento transition" />
           <div id="calendar" class="space-y-5"></div>
           <button type="submit" class="w-full sm:w-auto sm:px-10 bg-acento hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl shadow-suave transition">Enviar Predicciones</button>
         </div>
@@ -163,14 +163,14 @@
   </div>
 
   <!-- ============ VISTA: TABLERO ============ -->
-  <div id="view-tablero" class="hidden min-h-screen">
+  <div id="view-tablero" class="hidden min-h-screen bg-gradient-to-b from-noche via-[#13245A] to-noche2">
     <div class="max-w-2xl mx-auto px-4 lg:px-6 py-8">
-      <div class="bg-white rounded-card border border-borde shadow-suave overflow-hidden">
-        <div class="bg-marca px-6 py-4 flex items-center justify-between">
+      <div class="bg-white/5 rounded-card border border-white/10 overflow-hidden">
+        <div class="bg-white/5 border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <h2 class="text-white font-bold text-lg">Tablero de Líderes</h2>
           <span class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide">Top 5</span>
         </div>
-        <table class="w-full text-sm"><tbody id="leaderboard" class="divide-y divide-borde"></tbody></table>
+        <table class="w-full text-sm"><tbody id="leaderboard" class="divide-y divide-white/10"></tbody></table>
       </div>
     </div>
   </div>

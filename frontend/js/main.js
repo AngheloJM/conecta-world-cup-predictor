@@ -17,9 +17,9 @@ function toast(msg, type) {
 function renderLeaderboard() {
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : p;
   document.getElementById('leaderboard').innerHTML = LEADERBOARD.map(r => `
-    <tr class="hover:bg-fondo transition">
-      <td class="px-6 py-3 font-bold text-slate-600 w-10">${medal(r.pos)}</td>
-      <td class="px-2 py-3 font-semibold text-slate-800">${r.equipo}</td>
+    <tr class="hover:bg-white/5 transition">
+      <td class="px-6 py-3 font-bold text-blue-200 w-10">${medal(r.pos)}</td>
+      <td class="px-2 py-3 font-semibold text-white">${r.equipo}</td>
       <td class="px-6 py-3 text-right font-extrabold text-acento">${r.puntos}</td></tr>`).join('');
 }
 
