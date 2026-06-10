@@ -38,12 +38,14 @@ function showAuth() {
   authView.classList.remove('hidden');
   userArea.classList.add('hidden');
   userArea.classList.remove('flex');
+  document.getElementById('save-btn').disabled = true;
 }
 function enterApp(user) {
   authView.classList.add('hidden');
   userArea.classList.remove('hidden');
   userArea.classList.add('flex');
   userName.textContent = user.nombre;
+  document.getElementById('save-btn').disabled = false;
   loadUserPrediction();
 }
 

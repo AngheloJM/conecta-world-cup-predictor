@@ -188,10 +188,8 @@ function updateProgress() {
   const pct = Math.round((picks / 31) * 100);
   document.getElementById('progress-bar').style.width = pct + '%';
   document.getElementById('progress-text').textContent = pct + '%';
-  const saveBtn = document.getElementById('save-btn');
   if (S.f) {
-    document.getElementById('progress-state').innerHTML = `<span class="text-acento">¡Campeón: ${S.f.cod || S.f.name}! Listo para guardar</span>`;
-    saveBtn.disabled = false;
+    document.getElementById('progress-state').innerHTML = `<span class="text-acento">¡Campeón: ${S.f.cod || S.f.name}! 🏆</span>`;
     if (lastChampFired !== S.f.name) {
       lastChampFired = S.f.name;
       if (window.confetti) confetti({ particleCount: 130, spread: 80, origin: { y: 0.3 }, colors: ['#FF6B00', '#1A3B8B', '#ffffff'] });
@@ -200,7 +198,7 @@ function updateProgress() {
   } else {
     const need8 = S.thirds.size !== 8;
     document.getElementById('progress-state').innerHTML = need8 ? `<span class="text-blue-200">Elige los 8 terceros (${S.thirds.size}/8)</span>` : `Faltan ${31 - picks} llaves`;
-    saveBtn.disabled = true; lastChampFired = null;
+    lastChampFired = null;
   }
 }
 document.getElementById('save-btn').addEventListener('click', () => { guardarPrediccion(); });

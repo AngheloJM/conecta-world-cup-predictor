@@ -19,5 +19,5 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 /* Pestañas de navegación entre vistas (tema oscuro) */
 .tab-btn { color: #bfdbfe; border-bottom: 2px solid transparent; }
-.tab-btn:hover { color: #ffffff; }
-.tab-active { color: #ffffff; border-bottom-color: #FF6B00; }
+.tab-btn:hover { color: #ffffff; background: rgba(255,255,255,.04); }
+.tab-active { color: #ffffff; border-bottom-color: #FF6B00; background: rgba(255,107,0,.08); }
