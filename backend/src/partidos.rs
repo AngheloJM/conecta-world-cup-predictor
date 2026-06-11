@@ -115,6 +115,7 @@ pub async fn sincronizar(pool: &PgPool, token: &str) -> Result<(i64, usize), Str
               venue=EXCLUDED.venue, fecha_hora=EXCLUDED.fecha_hora, fase=EXCLUDED.fase, grupo=EXCLUDED.grupo,
               goles_local=EXCLUDED.goles_local, goles_visitante=EXCLUDED.goles_visitante,
               estado=EXCLUDED.estado, ganador=EXCLUDED.ganador
+            WHERE partidos.manual = false
             "#,
             m.id, local, visit,
             m.home_team.tla.as_deref(), m.away_team.tla.as_deref(),
@@ -303,6 +304,29 @@ pub async fn bonus_predictor(pool: &PgPool) -> Result<HashMap<i64, i32>, sqlx::E
         }
     }
 
+    // ---- 2b. Ganadores de cada ronda de eliminatorias (quién avanzó) ----
+    let ko = sqlx::query!(
+        r#"SELECT fase::text as "fase!", ganador
+           FROM partidos
+           WHERE estado = 'Finalizado' AND ganador IS NOT NULL
+                 AND fase IN ('Dieciseisavos','Octavos','Cuartos')"#
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut reach_octavos: HashSet<String> = HashSet::new(); // ganaron Dieciseisavos → llegan a Octavos
+    let mut reach_cuartos: HashSet<String> = HashSet::new(); // ganaron Octavos → llegan a Cuartos
+    let mut reach_semis: HashSet<String> = HashSet::new();   // ganaron Cuartos → llegan a Semis
+    for r in &ko {
+        if let Some(g) = r.ganador.clone() {
+            match r.fase.as_str() {
+                "Dieciseisavos" => { reach_octavos.insert(g); }
+                "Octavos" => { reach_cuartos.insert(g); }
+                "Cuartos" => { reach_semis.insert(g); }
+                _ => {}
+            }
+        }
+    }
+
     // ---- 3. Bonus por usuario ----
     let sims = sqlx::query!(r#"SELECT usuario_id, estructura_bracket_json FROM simulacion_inicial"#)
         .fetch_all(pool)
@@ -363,6 +387,23 @@ pub async fn bonus_predictor(pool: &PgPool) -> Result<HashMap<i64, i32>, sqlx::E
                     if let Some(name) = v.as_str() {
                         if finalists.contains(name) {
                             b += 10;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Avances del bracket: llega a octavos (r32, +3), cuartos (r16, +5), semis (qf, +8).
+        for (campo, conjunto, pts) in [
+            ("r32", &reach_octavos, 3),
+            ("r16", &reach_cuartos, 5),
+            ("qf", &reach_semis, 8),
+        ] {
+            if let Some(arr) = j.get(campo).and_then(|v| v.as_array()) {
+                for v in arr {
+                    if let Some(name) = v.as_str() {
+                        if conjunto.contains(name) {
+                            b += pts;
                         }
                     }
                 }

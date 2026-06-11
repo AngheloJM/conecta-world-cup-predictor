@@ -106,7 +106,8 @@ pub async fn set_resultado(
 
     let r = sqlx::query!(
         r#"UPDATE partidos
-           SET goles_local = $1, goles_visitante = $2, estado = 'Finalizado'::estado_partido
+           SET goles_local = $1, goles_visitante = $2,
+               estado = 'Finalizado'::estado_partido, manual = true
            WHERE id = $3"#,
         b.goles_local,
         b.goles_visitante,

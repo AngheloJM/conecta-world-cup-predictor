@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE partidos\n           SET goles_local = $1, goles_visitante = $2,\n               estado = 'Finalizado'::estado_partido, manual = true\n           WHERE id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int2",
+        "Int2",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "08115c43acc111bb369d34ddb0690eaeaf6705da42fcf639a2e604cd3364ee52"
+}

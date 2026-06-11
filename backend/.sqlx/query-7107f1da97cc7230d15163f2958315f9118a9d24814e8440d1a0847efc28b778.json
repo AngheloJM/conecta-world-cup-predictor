@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT fase::text as \"fase!\", ganador\n           FROM partidos\n           WHERE estado = 'Finalizado' AND ganador IS NOT NULL\n                 AND fase IN ('Dieciseisavos','Octavos','Cuartos')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "fase!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "ganador",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      true
+    ]
+  },
+  "hash": "7107f1da97cc7230d15163f2958315f9118a9d24814e8440d1a0847efc28b778"
+}

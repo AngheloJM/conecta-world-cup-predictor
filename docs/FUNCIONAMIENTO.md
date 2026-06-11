@@ -111,14 +111,17 @@ realmente pasó:
 |---|---|
 | **+25** | Campeón correcto |
 | **+10** | Cada finalista correcto (los 2 equipos de la final) |
-| **+5** | 1.º de cada grupo correcto |
-| **+3** | Cada clasificado top-2 correcto |
+| **+8** | Cada equipo que llega a **semifinales** |
+| **+5** | Cada equipo que llega a **cuartos** · 1.º de cada grupo |
+| **+3** | Cada equipo que llega a **octavos** · cada clasificado top-2 |
 | **+2** | Cada "mejor tercero" (grupo) correcto |
 
 Detalles del cálculo:
 - Las **tablas de grupos** se calculan de los partidos reales (puntos → diferencia
   de gol → goles a favor), y solo cuentan cuando el grupo está **completo**.
 - Los **mejores 8 terceros** se rankean cuando termina **toda** la fase de grupos.
+- Los **avances del bracket** (octavos/cuartos/semis) se determinan con el
+  **ganador real** de cada partido de eliminatorias.
 - El **campeón y finalistas** salen del partido de la final; el campeón usa el
   **ganador real** de la API (que resuelve penales).
 

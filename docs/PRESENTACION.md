@@ -152,6 +152,9 @@ Tu bracket también suma cuando aciertas:
 
 - 🏆 **Campeón correcto** → +25 puntos
 - 🥈 **Cada finalista** (los 2 de la final) → +10
+- 4️⃣ **Cada equipo que llega a semifinales** → +8
+- 8️⃣ **Cada equipo que llega a cuartos** → +5
+- 1️⃣6️⃣ **Cada equipo que llega a octavos** → +3
 - 🥇 **1.º de cada grupo** → +5
 - ✅ **Cada equipo que clasifica (top 2)** → +3
 - 🟫 **Cada mejor tercero** que le atines → +2

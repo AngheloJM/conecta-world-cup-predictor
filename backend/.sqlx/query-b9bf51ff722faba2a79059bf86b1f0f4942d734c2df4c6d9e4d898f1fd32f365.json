@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO partidos\n              (external_id, equipo_local, equipo_visitante, local_cod, visitante_cod,\n               crest_local, crest_visitante, venue, fecha_hora, fase, grupo,\n               goles_local, goles_visitante, estado, ganador)\n            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::fase_partido,$11,$12,$13,$14::estado_partido,$15)\n            ON CONFLICT (external_id) DO UPDATE SET\n              equipo_local=EXCLUDED.equipo_local, equipo_visitante=EXCLUDED.equipo_visitante,\n              local_cod=EXCLUDED.local_cod, visitante_cod=EXCLUDED.visitante_cod,\n              crest_local=EXCLUDED.crest_local, crest_visitante=EXCLUDED.crest_visitante,\n              venue=EXCLUDED.venue, fecha_hora=EXCLUDED.fecha_hora, fase=EXCLUDED.fase, grupo=EXCLUDED.grupo,\n              goles_local=EXCLUDED.goles_local, goles_visitante=EXCLUDED.goles_visitante,\n              estado=EXCLUDED.estado, ganador=EXCLUDED.ganador\n            WHERE partidos.manual = false\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Varchar",
+        "Timestamptz",
+        {
+          "Custom": {
+            "name": "fase_partido",
+            "kind": {
+              "Enum": [
+                "Grupos",
+                "Dieciseisavos",
+                "Octavos",
+                "Cuartos",
+                "Semifinal",
+                "Final"
+              ]
+            }
+          }
+        },
+        "Varchar",
+        "Int2",
+        "Int2",
+        {
+          "Custom": {
+            "name": "estado_partido",
+            "kind": {
+              "Enum": [
+                "Pendiente",
+                "Finalizado"
+              ]
+            }
+          }
+        },
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b9bf51ff722faba2a79059bf86b1f0f4942d734c2df4c6d9e4d898f1fd32f365"
+}
