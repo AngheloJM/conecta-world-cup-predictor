@@ -9,7 +9,7 @@ const STORAGE_KEY = 'conecta_predictor_2026_v2';
 let DEADLINE = null;
 function calcularDeadline(partidos) {
   const fechas = partidos.map(p => new Date(p.fecha_hora).getTime()).filter(t => !isNaN(t));
-  DEADLINE = fechas.length ? new Date(Math.min(...fechas) - 30 * 60 * 1000) : null;
+  DEADLINE = fechas.length ? new Date(Math.min(...fechas) - 20 * 60 * 1000) : null;
 }
 
 // Grupos (se construyen desde los partidos reales: buildGroupsFromPartidos).

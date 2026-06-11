@@ -17,7 +17,7 @@ use crate::{ApiError, AppState};
 /// ¿Ya cerró el predictor? Cierra `PREDICTOR_BUFFER_MIN` minutos (def. 30)
 /// antes del primer partido del torneo.
 async fn predictor_cerrado(pool: &PgPool) -> bool {
-    let buffer: i64 = std::env::var("PREDICTOR_BUFFER_MIN").ok().and_then(|s| s.parse().ok()).unwrap_or(30);
+    let buffer: i64 = std::env::var("PREDICTOR_BUFFER_MIN").ok().and_then(|s| s.parse().ok()).unwrap_or(20);
     match sqlx::query_scalar!("SELECT MIN(fecha_hora) FROM partidos").fetch_one(pool).await {
         Ok(Some(min)) => Utc::now() >= min - chrono::Duration::minutes(buffer),
         _ => false,
