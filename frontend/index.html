@@ -18,6 +18,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0E1E47" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
 </head>
 <body class="bg-noche text-slate-200 antialiased">
 
@@ -65,6 +70,10 @@
       <button data-view="tablero" class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-bold transition">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 11h14l-1 10H6L5 11z"/></svg>
         Tablero
+      </button>
+      <button data-view="mis" class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-bold transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Mis Apuestas
       </button>
     </div>
   </nav>
@@ -211,6 +220,14 @@
     </div>
   </div>
 
+  <!-- ============ VISTA: MIS APUESTAS ============ -->
+  <div id="view-mis" class="hidden min-h-screen bg-gradient-to-b from-noche via-[#13245A] to-noche2">
+    <div class="max-w-4xl mx-auto px-4 lg:px-6 py-8">
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-white mb-4">Mis Apuestas</h1>
+      <div id="mis-content"></div>
+    </div>
+  </div>
+
   <p class="text-center text-[11px] text-slate-400 py-6">© 2026 Conecta · World Cup Predictor interno</p>
 
   <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
@@ -256,7 +273,13 @@
   <script src="js/store.js"></script>
   <script src="js/predictor.js"></script>
   <script src="js/calendar.js"></script>
+  <script src="js/mis.js"></script>
   <script src="js/main.js"></script>
   <script src="js/auth.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+  </script>
 </body>
 </html>

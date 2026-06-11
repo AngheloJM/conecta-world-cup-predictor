@@ -1,0 +1,14 @@
+{
+  "name": "Conecta · World Cup Predictor",
+  "short_name": "Conecta WCP",
+  "description": "Polla Mundialista 2026 de Conecta",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1E47",
+  "theme_color": "#0E1E47",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

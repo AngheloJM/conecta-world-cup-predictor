@@ -101,7 +101,7 @@ async function renderLeaderboard() {
 }
 
 // ---------- Pestañas (vistas) ----------
-const VIEWS = ['predictor', 'calendario', 'tablero'];
+const VIEWS = ['predictor', 'calendario', 'tablero', 'mis'];
 function showView(name) {
   VIEWS.forEach(v => {
     document.getElementById('view-' + v).classList.toggle('hidden', v !== name);
@@ -110,6 +110,7 @@ function showView(name) {
   // El bracket sólo mide bien estando visible: redibuja conectores al entrar al Predictor.
   if (name === 'predictor') requestAnimationFrame(drawConnectors);
   if (name === 'tablero') renderLeaderboard();   // ranking fresco al abrir
+  if (name === 'mis') renderMis();               // resumen personal fresco
   window.scrollTo({ top: 0 });
 }
 document.getElementById('tabs').addEventListener('click', e => {
