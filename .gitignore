@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Backups de la BD (datos sensibles, nunca subir)
+backups/
