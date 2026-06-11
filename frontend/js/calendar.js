@@ -27,14 +27,17 @@ function crestImg(url, cod) {
     : `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white/10 text-white/70">${cod || '—'}</span>`;
 }
 
-// Ventana "en vivo": desde el saque inicial hasta ~2.5 h después (90' + descanso + descuento).
-const LIVE_MS = 150 * 60 * 1000;
+// Ventana "en vivo" según la fase. Grupos: 90' + descanso + descuento (sin prórroga).
+// Eliminatorias: pueden ir a prórroga (30') + penales, así que la ventana es mayor.
+function liveMs(fase) {
+  return fase === 'Grupos' ? 130 * 60 * 1000 : 195 * 60 * 1000;
+}
 
 function matchRow(p) {
   const start = new Date(p.fecha_hora);
   const ahora = Date.now();
   const finalizado = p.estado === 'Finalizado';
-  const enVivo = !finalizado && ahora >= start.getTime() && ahora - start.getTime() <= LIVE_MS;
+  const enVivo = !finalizado && ahora >= start.getTime() && ahora - start.getTime() <= liveMs(p.fase);
   const cerrado = finalizado || start <= new Date();
   const ap = APUESTAS[p.id];
   const bl = ap && ap.prediccion_local != null ? ap.prediccion_local : '';
