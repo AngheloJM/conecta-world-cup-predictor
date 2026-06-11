@@ -215,4 +215,4 @@ backend con el extractor `AdminUser` (verifica `es_admin`).
 - **Base de datos:** Neon (PostgreSQL gestionado, gratis, escala a cero).
 - **Datos reales:** football-data.org.
 
-Diagrama y variables de entorno en el [`README.md`](README.md).
+Diagrama y variables de entorno en el [`README.md`](../README.md).

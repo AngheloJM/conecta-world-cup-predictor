@@ -7,7 +7,7 @@ Quiniela mundialista corporativa para el **Mundial 2026**. Cada usuario:
 
 El backend trae resultados reales automáticamente, calcula los puntos y ordena el ranking — todo solo.
 
-📖 **¿Cómo funciona en detalle (puntaje, bloqueos, guardado)?** → [`FUNCIONAMIENTO.md`](FUNCIONAMIENTO.md)
+📖 **¿Cómo funciona en detalle (puntaje, bloqueos, guardado)?** → [`FUNCIONAMIENTO.md`](docs/FUNCIONAMIENTO.md)
 
 ---
 
@@ -59,14 +59,17 @@ Mundial-Rust/
 │  │  ├─ partidos.rs         #   sync con la API, scoring en lote, bonus del predictor
 │  │  ├─ admin.rs            #   gestión de usuarios + carga manual de resultados
 │  │  └─ scoring.rs          #   algoritmo puro de puntos (referencia + tests)
-│  ├─ migrations/            #   esquema PostgreSQL (0001 … 0005)
+│  ├─ migrations/            #   esquema PostgreSQL (0001 … 0006)
 │  ├─ .sqlx/                 #   caché de queries (build offline en Docker/Railway)
 │  ├─ Dockerfile             #   build para Railway (Linux)
 │  └─ Cargo.toml
 │
+├─ docs/                     # documentación
+│  ├─ FUNCIONAMIENTO.md      #   documento funcional detallado
+│  ├─ PRESENTACION.md        #   guía del usuario (para generar slides en Gamma)
+│  └─ img/                   #   capturas de pantalla
 ├─ docker-compose.yml        # PostgreSQL local para desarrollo
 ├─ vercel.json               # rewrites + cabeceras de seguridad (frontend)
-├─ FUNCIONAMIENTO.md         # documento funcional detallado
 └─ .env.example
 ```
 
@@ -133,4 +136,4 @@ cargo +stable-x86_64-pc-windows-gnu sqlx prepare
 
 **Desempate:** más exactos (10) → más diferencias (7) → más simples (5) → registro más antiguo.
 
-Detalle completo en [`FUNCIONAMIENTO.md`](FUNCIONAMIENTO.md).
+Detalle completo en [`FUNCIONAMIENTO.md`](docs/FUNCIONAMIENTO.md).

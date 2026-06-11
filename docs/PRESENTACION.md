@@ -45,11 +45,11 @@ puntos según le atines.
 
 # Cómo empezar — Paso 1: Regístrate
 
-1. Entra al enlace de la polla (te lo compartimos)
+1. Entra al enlace de la quiniela (te lo compartimos)
 2. Crea tu cuenta con tu **nombre, correo y una contraseña**
 3. ¡Listo! Compites de forma **individual** con tu nombre
 
-[📷 CAPTURA: pantalla de registro/login]
+![Pantalla de registro / inicio de sesión](img/celular.png)
 
 > Tu contraseña debe tener al menos **8 caracteres**.
 
