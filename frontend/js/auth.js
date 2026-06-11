@@ -34,11 +34,15 @@ function setAuthMode(mode) {
 function showError(msg) { authError.textContent = msg; authError.classList.remove('hidden'); }
 function hideError() { authError.classList.add('hidden'); }
 
+const adminTab = document.getElementById('tab-admin');
+
 function showAuth() {
   authView.classList.remove('hidden');
   userArea.classList.add('hidden');
   userArea.classList.remove('flex');
   document.getElementById('save-btn').disabled = true;
+  adminTab.classList.add('hidden');
+  adminTab.classList.remove('flex');
 }
 function enterApp(user) {
   authView.classList.add('hidden');
@@ -46,6 +50,9 @@ function enterApp(user) {
   userArea.classList.add('flex');
   userName.textContent = user.nombre;
   document.getElementById('save-btn').disabled = false;
+  // Pestaña admin solo para administradores.
+  adminTab.classList.toggle('hidden', !user.es_admin);
+  adminTab.classList.toggle('flex', !!user.es_admin);
   loadUserPrediction();
   loadApuestas();   // apuestas por partido (relacional) en el calendario
 }

@@ -123,6 +123,31 @@ impl FromRequestParts<AppState> for AuthUser {
     }
 }
 
+// ------------------------------------------------------------ Extractor de admin
+pub struct AdminUser {
+    pub id: i64,
+}
+
+#[axum::async_trait]
+impl FromRequestParts<AppState> for AdminUser {
+    type Rejection = (StatusCode, Json<ApiError>);
+
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+        let user = AuthUser::from_request_parts(parts, state).await?;
+        let es = sqlx::query_scalar!("SELECT es_admin FROM usuarios WHERE id = $1", user.id)
+            .fetch_optional(&state.pool)
+            .await
+            .ok()
+            .flatten()
+            .unwrap_or(false);
+        if es {
+            Ok(AdminUser { id: user.id })
+        } else {
+            Err(err(StatusCode::FORBIDDEN, "Solo administradores"))
+        }
+    }
+}
+
 // ------------------------------------------------------------ Handlers
 #[utoipa::path(
     post, path = "/auth/register", tag = "auth",

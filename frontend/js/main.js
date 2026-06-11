@@ -101,7 +101,7 @@ async function renderLeaderboard() {
 }
 
 // ---------- Pestañas (vistas) ----------
-const VIEWS = ['predictor', 'calendario', 'tablero', 'mis'];
+const VIEWS = ['predictor', 'calendario', 'tablero', 'mis', 'admin'];
 function showView(name) {
   VIEWS.forEach(v => {
     document.getElementById('view-' + v).classList.toggle('hidden', v !== name);
@@ -111,6 +111,7 @@ function showView(name) {
   if (name === 'predictor') requestAnimationFrame(drawConnectors);
   if (name === 'tablero') renderLeaderboard();   // ranking fresco al abrir
   if (name === 'mis') renderMis();               // resumen personal fresco
+  if (name === 'admin') renderAdmin();           // panel admin fresco
   window.scrollTo({ top: 0 });
 }
 document.getElementById('tabs').addEventListener('click', e => {

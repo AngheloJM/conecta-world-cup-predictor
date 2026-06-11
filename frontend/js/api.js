@@ -42,4 +42,11 @@ const api = {
   getRanking: () => apiFetch('/ranking'),
   getApuestas: () => apiFetch('/apuestas'),
   saveApuesta: (partidoId, l, v) => apiFetch('/apuestas', { method: 'POST', body: JSON.stringify({ partido_id: partidoId, prediccion_local: l, prediccion_visitante: v }) }),
+
+  // --- Admin ---
+  adminSync: () => apiFetch('/admin/sync', { method: 'POST' }),
+  adminRecalcular: () => apiFetch('/admin/recalcular', { method: 'POST' }),
+  adminUsuarios: () => apiFetch('/admin/usuarios'),
+  adminBorrarUsuario: (id) => apiFetch('/admin/usuarios/' + id, { method: 'DELETE' }),
+  adminSetResultado: (id, l, v) => apiFetch('/admin/partido/' + id + '/resultado', { method: 'POST', body: JSON.stringify({ goles_local: l, goles_visitante: v }) }),
 };

@@ -1,6 +1,7 @@
 //! Polla Mundialista "Conecta" · Backend Axum.
 //! Auth (registro/login + JWT), candado de tiempo en apuestas y cálculo de puntos.
 
+mod admin;
 mod apuestas;
 mod auth;
 mod partidos;
@@ -11,7 +12,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::{Html, IntoResponse},
-    routing::{get, post},
+    routing::{delete, get, post},
     Json, Router,
 };
 use serde::Serialize;
@@ -224,6 +225,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/apuestas", get(apuestas::listar).post(apuestas::crear))
         .route("/admin/sync", post(partidos::sync))
         .route("/admin/recalcular", post(partidos::recalcular))
+        .route("/admin/usuarios", get(admin::usuarios))
+        .route("/admin/usuarios/:id", delete(admin::borrar_usuario))
+        .route("/admin/partido/:id/resultado", post(admin::set_resultado))
         .route("/openapi.json", get(openapi_json))
         .route("/docs", get(docs_ui))
         .layer(cors)
