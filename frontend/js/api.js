@@ -36,6 +36,7 @@ const api = {
   register: (body) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   me: () => apiFetch('/me'),
+  cambiarPassword: (actual, nueva) => apiFetch('/me/password', { method: 'POST', body: JSON.stringify({ actual, nueva }) }),
   getSimulacion: () => apiFetch('/simulacion'),
   saveSimulacion: (body) => apiFetch('/simulacion', { method: 'PUT', body: JSON.stringify(body) }),
   getPartidos: () => apiFetch('/partidos'),
@@ -48,5 +49,6 @@ const api = {
   adminRecalcular: () => apiFetch('/admin/recalcular', { method: 'POST' }),
   adminUsuarios: () => apiFetch('/admin/usuarios'),
   adminBorrarUsuario: (id) => apiFetch('/admin/usuarios/' + id, { method: 'DELETE' }),
+  adminResetPassword: (id, password) => apiFetch('/admin/usuarios/' + id + '/password', { method: 'POST', body: JSON.stringify({ password }) }),
   adminSetResultado: (id, l, v) => apiFetch('/admin/partido/' + id + '/resultado', { method: 'POST', body: JSON.stringify({ goles_local: l, goles_visitante: v }) }),
 };

@@ -74,5 +74,17 @@ async function renderMis() {
     }).join('') + '</div>';
   }
 
-  misEl.innerHTML = resumen + `<h2 class="text-sm font-bold text-white mt-6 mb-3">Tus pronósticos (${apuestas.length})</h2>` + lista;
+  misEl.innerHTML = resumen
+    + `<h2 class="text-sm font-bold text-white mt-6 mb-3">Tus pronósticos (${apuestas.length})</h2>` + lista
+    + `<div class="mt-8 text-center"><button id="btn-cambiar-pass" class="text-sm font-bold text-blue-200 hover:text-white">🔑 Cambiar mi contraseña</button></div>`;
 }
+
+// Cambio de contraseña del propio usuario (delegado en el contenedor).
+misEl.addEventListener('click', async e => {
+  if (!e.target.closest('#btn-cambiar-pass')) return;
+  const actual = prompt('Tu contraseña actual:'); if (!actual) return;
+  const nueva = prompt('Tu nueva contraseña (mín. 8 caracteres):'); if (!nueva) return;
+  if (nueva.length < 8) { toast('La nueva debe tener al menos 8 caracteres', 'err'); return; }
+  try { await api.cambiarPassword(actual, nueva); toast('Contraseña actualizada ✓'); }
+  catch (err) { toast(err.message, 'err'); }
+});

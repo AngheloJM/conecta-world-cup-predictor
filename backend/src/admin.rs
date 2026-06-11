@@ -64,6 +64,30 @@ pub async fn borrar_usuario(admin: AdminUser, State(st): State<AppState>, Path(i
 }
 
 #[derive(Deserialize)]
+pub struct NuevaPassword {
+    pub password: String,
+}
+
+/// El admin restablece la contraseña de un usuario (contraseña temporal).
+pub async fn reset_password(_admin: AdminUser, State(st): State<AppState>, Path(id): Path<i64>, Json(b): Json<NuevaPassword>) -> impl IntoResponse {
+    if b.password.len() < 8 {
+        return (StatusCode::BAD_REQUEST, Json(ApiError::new("La contraseña debe tener al menos 8 caracteres"))).into_response();
+    }
+    let hash = match crate::auth::hash_password(&b.password) {
+        Ok(h) => h,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("Error al procesar la contraseña"))).into_response(),
+    };
+    match sqlx::query!("UPDATE usuarios SET password_hash = $1 WHERE id = $2", hash, id).execute(&st.pool).await {
+        Ok(r) if r.rows_affected() == 1 => (StatusCode::OK, Json(json!({ "mensaje": "Contraseña restablecida" }))).into_response(),
+        Ok(_) => (StatusCode::NOT_FOUND, Json(ApiError::new("Usuario no encontrado"))).into_response(),
+        Err(e) => {
+            tracing::error!("reset password error: {e}");
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("Error de base de datos"))).into_response()
+        }
+    }
+}
+
+#[derive(Deserialize)]
 pub struct ResultadoReq {
     pub goles_local: i16,
     pub goles_visitante: i16,

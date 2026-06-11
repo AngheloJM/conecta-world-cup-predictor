@@ -21,7 +21,10 @@ async function renderAdmin() {
         <div class="text-[11px] text-blue-200/60">${u.email}</div>
       </td>
       <td class="px-4 py-2.5 text-right font-extrabold text-acento tabular-nums">${u.puntos_totales}</td>
-      <td class="px-4 py-2.5 text-right">${u.id === yo ? '<span class="text-[11px] text-blue-200/50">tú</span>' : `<button data-del="${u.id}" class="text-red-300 hover:text-red-200 text-xs font-bold">Eliminar</button>`}</td>
+      <td class="px-4 py-2.5 text-right whitespace-nowrap">
+        <button data-pass="${u.id}" class="text-blue-300 hover:text-blue-200 text-xs font-bold mr-3">Clave</button>
+        ${u.id === yo ? '<span class="text-[11px] text-blue-200/50">tú</span>' : `<button data-del="${u.id}" class="text-red-300 hover:text-red-200 text-xs font-bold">Eliminar</button>`}
+      </td>
     </tr>`).join('');
 
   adminEl.innerHTML = `
@@ -95,6 +98,16 @@ adminEl.addEventListener('click', async e => {
     status.textContent = 'Recalculando…';
     try { const r = await api.adminRecalcular(); status.textContent = `✓ Recalculado (${r.partidos_finalizados} partidos finalizados).`; renderAdmin(); }
     catch (err) { status.textContent = '✗ ' + err.message; }
+    return;
+  }
+
+  const pass = e.target.closest('[data-pass]');
+  if (pass) {
+    const np = prompt('Nueva contraseña temporal para este usuario (mín. 8):');
+    if (!np) return;
+    if (np.length < 8) { toast('Mínimo 8 caracteres', 'err'); return; }
+    try { await api.adminResetPassword(+pass.dataset.pass, np); toast('Contraseña restablecida ✓. Compártesela al usuario.'); }
+    catch (err) { toast(err.message, 'err'); }
     return;
   }
 

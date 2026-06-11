@@ -55,7 +55,7 @@ pub struct Claims {
 }
 
 // ------------------------------------------------------------ Helpers
-fn hash_password(pw: &str) -> Result<String, ()> {
+pub fn hash_password(pw: &str) -> Result<String, ()> {
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
         .hash_password(pw.as_bytes(), &salt)
@@ -326,5 +326,39 @@ pub async fn me(user: AuthUser, State(st): State<AppState>) -> impl IntoResponse
             .into_response(),
         Ok(None) => err(StatusCode::NOT_FOUND, "Usuario no encontrado").into_response(),
         Err(_) => err(StatusCode::INTERNAL_SERVER_ERROR, "Error de base de datos").into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct CambioPassword {
+    pub actual: String,
+    pub nueva: String,
+}
+
+/// El usuario cambia su propia contraseña (verifica la actual).
+pub async fn cambiar_password(user: AuthUser, State(st): State<AppState>, Json(b): Json<CambioPassword>) -> impl IntoResponse {
+    if b.nueva.len() < 8 {
+        return err(StatusCode::BAD_REQUEST, "La nueva contraseña debe tener al menos 8 caracteres").into_response();
+    }
+    let row = sqlx::query!("SELECT password_hash FROM usuarios WHERE id = $1", user.id)
+        .fetch_optional(&st.pool)
+        .await;
+    let hash = match row {
+        Ok(Some(r)) => r.password_hash,
+        _ => return err(StatusCode::NOT_FOUND, "Usuario no encontrado").into_response(),
+    };
+    if !verify_password(&b.actual, &hash) {
+        return err(StatusCode::UNAUTHORIZED, "La contraseña actual es incorrecta").into_response();
+    }
+    let nuevo = match hash_password(&b.nueva) {
+        Ok(h) => h,
+        Err(_) => return err(StatusCode::INTERNAL_SERVER_ERROR, "No se pudo procesar la contraseña").into_response(),
+    };
+    match sqlx::query!("UPDATE usuarios SET password_hash = $1 WHERE id = $2", nuevo, user.id)
+        .execute(&st.pool)
+        .await
+    {
+        Ok(_) => (StatusCode::OK, Json(serde_json::json!({ "mensaje": "Contraseña actualizada" }))).into_response(),
+        Err(_) => err(StatusCode::INTERNAL_SERVER_ERROR, "No se pudo actualizar la contraseña").into_response(),
     }
 }
