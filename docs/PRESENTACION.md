@@ -2,7 +2,7 @@
   GUÍA DEL USUARIO — CONTENIDO PARA GAMMA AI
   Cómo usarlo: gamma.app → Create new → "Paste in text" → pega TODO este contenido.
   Cada bloque separado por "---" es una diapositiva.
-  Donde dice [📷 CAPTURA: ...] inserta una captura de pantalla real de la app.
+  Incluye una captura (login). Al pegar en Gamma, súbela manualmente en ese slide.
   Tono: amigable, motivador, para colaboradores (no técnico).
   Colores de marca: naranja #FF6B00 sobre azul noche #0E1E47. Estilo deportivo y festivo. ⚽
 -->
@@ -63,7 +63,6 @@ En la pestaña **Predictor** ordenas los 12 grupos como crees que quedarán.
 - El **1.º y 2.º** de cada grupo avanzan directo
 - Acomódalos del 1.º al 4.º según tu pronóstico
 
-[📷 CAPTURA: vista de los grupos del Predictor]
 
 ---
 
@@ -75,7 +74,6 @@ terceros lugares**.
 - Marca los **8 grupos** cuyo tercer lugar crees que clasificará
 - Esos equipos entran al bracket
 
-[📷 CAPTURA: selección de mejores terceros]
 
 ---
 
@@ -86,7 +84,6 @@ Llena la llave de eliminación: octavos, cuartos, semifinal y **la gran final**.
 - Ve eligiendo quién avanza en cada ronda
 - Al final, **corona a tu campeón** 🏆
 
-[📷 CAPTURA: bracket / llave de eliminación]
 
 > Se guarda solo. Verás un "Guardado ✓" cada vez.
 
@@ -100,7 +97,6 @@ En la pestaña **Calendario** predices el resultado exacto de cada partido.
 - Se guarda automáticamente
 - Puedes cambiarlo… **hasta que empiece el partido**
 
-[📷 CAPTURA: calendario con un partido y sus casillas de marcador]
 
 ---
 
@@ -164,7 +160,6 @@ Mira en qué lugar vas contra toda la empresa.
 - Tu posición resaltada
 - Se actualiza **solo**, conforme terminan los partidos
 
-[📷 CAPTURA: tablero / ranking con el podio]
 
 ---
 
@@ -189,7 +184,6 @@ Tu resumen personal en un solo lugar:
 - Cuántos exactos, diferencias y simples llevas
 - El **detalle de cada apuesta** y los puntos que te dio
 
-[📷 CAPTURA: vista "Mis Apuestas"]
 
 ---
 
@@ -200,7 +194,6 @@ Para tenerla a la mano como una app:
 - **Android (Chrome):** menú ⋮ → "Instalar app" / "Agregar a pantalla de inicio"
 - **iPhone (Safari):** botón Compartir → "Agregar a inicio"
 
-[📷 CAPTURA: app instalada con su ícono en el celular]
 
 > Se abre como app, sin barras del navegador. ¡Cómodo y rápido!
 
