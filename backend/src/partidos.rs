@@ -8,6 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::PgPool;
+use std::collections::{HashMap, HashSet};
 
 use crate::auth::AuthUser;
 use crate::scoring::calcular_puntos;
@@ -41,6 +42,7 @@ struct ApiTeam {
 }
 #[derive(Deserialize)]
 struct ApiScore {
+    winner: Option<String>, // HOME_TEAM | AWAY_TEAM | DRAW (resuelve penales)
     #[serde(rename = "fullTime")]
     full_time: ApiFullTime,
 }
@@ -90,26 +92,36 @@ pub async fn sincronizar(pool: &PgPool, token: &str) -> Result<(i64, usize), Str
         let gv = if estado == "Finalizado" { m.score.full_time.away.map(|v| v as i16) } else { None };
         let local = m.home_team.name.clone().unwrap_or_else(|| "Por definir".into());
         let visit = m.away_team.name.clone().unwrap_or_else(|| "Por definir".into());
+        let ganador: Option<String> = if estado == "Finalizado" {
+            match m.score.winner.as_deref() {
+                Some("HOME_TEAM") => Some(local.clone()),
+                Some("AWAY_TEAM") => Some(visit.clone()),
+                _ => None,
+            }
+        } else {
+            None
+        };
 
         let r = sqlx::query!(
             r#"
             INSERT INTO partidos
               (external_id, equipo_local, equipo_visitante, local_cod, visitante_cod,
                crest_local, crest_visitante, venue, fecha_hora, fase, grupo,
-               goles_local, goles_visitante, estado)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::fase_partido,$11,$12,$13,$14::estado_partido)
+               goles_local, goles_visitante, estado, ganador)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::fase_partido,$11,$12,$13,$14::estado_partido,$15)
             ON CONFLICT (external_id) DO UPDATE SET
               equipo_local=EXCLUDED.equipo_local, equipo_visitante=EXCLUDED.equipo_visitante,
               local_cod=EXCLUDED.local_cod, visitante_cod=EXCLUDED.visitante_cod,
               crest_local=EXCLUDED.crest_local, crest_visitante=EXCLUDED.crest_visitante,
               venue=EXCLUDED.venue, fecha_hora=EXCLUDED.fecha_hora, fase=EXCLUDED.fase, grupo=EXCLUDED.grupo,
-              goles_local=EXCLUDED.goles_local, goles_visitante=EXCLUDED.goles_visitante, estado=EXCLUDED.estado
+              goles_local=EXCLUDED.goles_local, goles_visitante=EXCLUDED.goles_visitante,
+              estado=EXCLUDED.estado, ganador=EXCLUDED.ganador
             "#,
             m.id, local, visit,
             m.home_team.tla.as_deref(), m.away_team.tla.as_deref(),
             m.home_team.crest.as_deref(), m.away_team.crest.as_deref(),
             m.venue.as_deref(), m.utc_date, fase as _, grupo_corto(&m.group),
-            gl, gv, estado as _,
+            gl, gv, estado as _, ganador,
         )
         .execute(pool)
         .await;
@@ -159,15 +171,187 @@ pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
         }
     }
 
-    // Recalcular el acumulado de cada usuario.
+    // Bonus del predictor (campeón, finalistas, posiciones de grupo, terceros).
+    let bonus = bonus_predictor(pool).await?;
+    sqlx::query!("UPDATE usuarios SET puntos_predictor = 0").execute(pool).await?;
+    for (uid, b) in &bonus {
+        sqlx::query!("UPDATE usuarios SET puntos_predictor = $1 WHERE id = $2", b, uid)
+            .execute(pool)
+            .await?;
+    }
+
+    // Total de cada usuario = apuestas por partido + bonus del predictor.
     sqlx::query!(
         r#"UPDATE usuarios u SET puntos_totales = COALESCE(
-             (SELECT SUM(ap.puntos_ganados) FROM apuestas_partidos ap WHERE ap.usuario_id = u.id), 0)"#
+             (SELECT SUM(ap.puntos_ganados) FROM apuestas_partidos ap WHERE ap.usuario_id = u.id), 0)
+             + u.puntos_predictor"#
     )
     .execute(pool)
     .await?;
 
     Ok(partidos.len() as i64)
+}
+
+// ============================================================
+//  Bonus del PREDICTOR: compara la simulación de cada usuario con
+//  los resultados reales (tablas de grupos + final).
+//    Campeón +25 · Finalista +10 c/u · 1.º de grupo +5 ·
+//    Clasificado top-2 +3 c/u · Mejor tercero (grupo) +2 c/u
+// ============================================================
+pub async fn bonus_predictor(pool: &PgPool) -> Result<HashMap<i64, i32>, sqlx::Error> {
+    // ---- 1. Tablas de grupos reales (solo de partidos finalizados) ----
+    let gm = sqlx::query!(
+        r#"SELECT grupo as "grupo!", equipo_local, equipo_visitante,
+                  goles_local, goles_visitante, estado::text as "estado!"
+           FROM partidos WHERE fase = 'Grupos' AND grupo IS NOT NULL"#
+    )
+    .fetch_all(pool)
+    .await?;
+
+    // grupo -> (total, finalizados, stats: equipo -> [pts, dif, gf])
+    let mut groups: HashMap<String, (i32, i32, HashMap<String, [i32; 3]>)> = HashMap::new();
+    for r in &gm {
+        let e = groups.entry(r.grupo.clone()).or_insert((0, 0, HashMap::new()));
+        e.0 += 1;
+        if r.estado == "Finalizado" {
+            if let (Some(gl), Some(gv)) = (r.goles_local, r.goles_visitante) {
+                e.1 += 1;
+                let (gl, gv) = (gl as i32, gv as i32);
+                {
+                    let s = e.2.entry(r.equipo_local.clone()).or_insert([0, 0, 0]);
+                    s[1] += gl - gv; s[2] += gl;
+                    if gl > gv { s[0] += 3 } else if gl == gv { s[0] += 1 }
+                }
+                {
+                    let s = e.2.entry(r.equipo_visitante.clone()).or_insert([0, 0, 0]);
+                    s[1] += gv - gl; s[2] += gv;
+                    if gv > gl { s[0] += 3 } else if gv == gl { s[0] += 1 }
+                }
+            }
+        }
+    }
+
+    let cmp = |a: &[i32; 3], b: &[i32; 3]| b[0].cmp(&a[0]).then(b[1].cmp(&a[1])).then(b[2].cmp(&a[2]));
+    let mut group_winner: HashMap<String, String> = HashMap::new();
+    let mut group_top2: HashMap<String, Vec<String>> = HashMap::new();
+    let mut thirds: Vec<(String, [i32; 3])> = Vec::new(); // (letra del grupo, stats del 3.º)
+    let total_groups = groups.len();
+    let mut completos = 0;
+    for (letra, (total, fin, stats)) in &groups {
+        if *total > 0 && total == fin && stats.len() >= 2 {
+            completos += 1;
+            let mut ranked: Vec<(&String, &[i32; 3])> = stats.iter().collect();
+            ranked.sort_by(|a, b| cmp(a.1, b.1));
+            group_winner.insert(letra.clone(), ranked[0].0.clone());
+            group_top2.insert(letra.clone(), vec![ranked[0].0.clone(), ranked[1].0.clone()]);
+            if ranked.len() >= 3 {
+                thirds.push((letra.clone(), *ranked[2].1));
+            }
+        }
+    }
+    let all_groups_done = total_groups > 0 && completos == total_groups;
+
+    // Mejores 8 terceros (por letra de grupo) cuando ya terminaron todos los grupos.
+    let mut best_third_letters: HashSet<String> = HashSet::new();
+    if all_groups_done {
+        thirds.sort_by(|a, b| cmp(&a.1, &b.1));
+        for t in thirds.iter().take(8) {
+            best_third_letters.insert(t.0.clone());
+        }
+    }
+
+    // ---- 2. Final real (último partido de fase 'Final') ----
+    let final_row = sqlx::query!(
+        r#"SELECT equipo_local, equipo_visitante, ganador, goles_local, goles_visitante, estado::text as "estado!"
+           FROM partidos WHERE fase = 'Final' ORDER BY fecha_hora DESC LIMIT 1"#
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    let mut champion: Option<String> = None;
+    let mut finalists: HashSet<String> = HashSet::new();
+    if let Some(f) = final_row {
+        if f.estado == "Finalizado" {
+            finalists.insert(f.equipo_local.clone());
+            finalists.insert(f.equipo_visitante.clone());
+            champion = f.ganador.clone().or_else(|| match (f.goles_local, f.goles_visitante) {
+                (Some(l), Some(v)) if l > v => Some(f.equipo_local.clone()),
+                (Some(l), Some(v)) if v > l => Some(f.equipo_visitante.clone()),
+                _ => None,
+            });
+        }
+    }
+
+    // ---- 3. Bonus por usuario ----
+    let sims = sqlx::query!(r#"SELECT usuario_id, estructura_bracket_json FROM simulacion_inicial"#)
+        .fetch_all(pool)
+        .await?;
+
+    let mut bonus: HashMap<i64, i32> = HashMap::new();
+    for s in &sims {
+        let j = &s.estructura_bracket_json;
+        let mut b = 0i32;
+
+        // Grupos: 1.º (+5) y clasificados top-2 (+3 c/u).
+        if let Some(obj) = j.get("groups").and_then(|v| v.as_object()) {
+            for (letra, arr) in obj {
+                let arr = match arr.as_array() {
+                    Some(a) => a,
+                    None => continue,
+                };
+                if let Some(w) = group_winner.get(letra) {
+                    if arr.get(0).and_then(|v| v.as_str()) == Some(w.as_str()) {
+                        b += 5;
+                    }
+                }
+                if let Some(top2) = group_top2.get(letra) {
+                    for i in 0..2 {
+                        if let Some(pt) = arr.get(i).and_then(|v| v.as_str()) {
+                            if top2.iter().any(|t| t == pt) {
+                                b += 3;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Mejores terceros (+2 por grupo acertado).
+        if all_groups_done {
+            if let Some(th) = j.get("thirds").and_then(|v| v.as_array()) {
+                for v in th {
+                    if let Some(letra) = v.as_str() {
+                        if best_third_letters.contains(letra) {
+                            b += 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Campeón (+25).
+        if let Some(champ) = &champion {
+            if j.get("f").and_then(|v| v.as_str()) == Some(champ.as_str()) {
+                b += 25;
+            }
+        }
+        // Finalistas (+10 c/u).
+        if !finalists.is_empty() {
+            if let Some(sf) = j.get("sf").and_then(|v| v.as_array()) {
+                for v in sf {
+                    if let Some(name) = v.as_str() {
+                        if finalists.contains(name) {
+                            b += 10;
+                        }
+                    }
+                }
+            }
+        }
+
+        bonus.insert(s.usuario_id, b);
+    }
+
+    Ok(bonus)
 }
 
 async fn es_admin(pool: &PgPool, uid: i64) -> bool {

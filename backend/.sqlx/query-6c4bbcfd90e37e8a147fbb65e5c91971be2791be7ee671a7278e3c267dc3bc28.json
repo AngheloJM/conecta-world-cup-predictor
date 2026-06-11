@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE usuarios SET puntos_predictor = 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "6c4bbcfd90e37e8a147fbb65e5c91971be2791be7ee671a7278e3c267dc3bc28"
+}

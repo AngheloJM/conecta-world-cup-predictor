@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id, u.nombre, u.nombre_equipo, u.puntos_totales, u.puntos_predictor,\n                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 10) AS \"exactos!\",\n                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 7)  AS \"diferencias!\",\n                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 5)  AS \"simples!\"\n           FROM usuarios u\n           LEFT JOIN apuestas_partidos ap ON ap.usuario_id = u.id\n           GROUP BY u.id, u.nombre, u.nombre_equipo, u.puntos_totales, u.puntos_predictor, u.fecha_registro\n           ORDER BY u.puntos_totales DESC, \"exactos!\" DESC, \"diferencias!\" DESC, \"simples!\" DESC, u.fecha_registro ASC\n           LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "nombre",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "nombre_equipo",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "puntos_totales",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "puntos_predictor",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "exactos!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "diferencias!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "simples!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2ffb641a215f24e07cd21ae0a5b626a3467d0bae9c1257110cf9d7e699aafd82"
+}

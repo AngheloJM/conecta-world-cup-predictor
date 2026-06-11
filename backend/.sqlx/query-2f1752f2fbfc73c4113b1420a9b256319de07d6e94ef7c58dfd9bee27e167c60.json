@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT grupo as \"grupo!\", equipo_local, equipo_visitante,\n                  goles_local, goles_visitante, estado::text as \"estado!\"\n           FROM partidos WHERE fase = 'Grupos' AND grupo IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "grupo!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "equipo_local",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "equipo_visitante",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "goles_local",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "goles_visitante",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "estado!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "2f1752f2fbfc73c4113b1420a9b256319de07d6e94ef7c58dfd9bee27e167c60"
+}

@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT equipo_local, equipo_visitante, ganador, goles_local, goles_visitante, estado::text as \"estado!\"\n           FROM partidos WHERE fase = 'Final' ORDER BY fecha_hora DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "equipo_local",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "equipo_visitante",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "ganador",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "goles_local",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "goles_visitante",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "estado!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "d5f72eff982484e725f4d2066ac246725a4123780c8be53f2fb232b1485d2da0"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE usuarios u SET puntos_totales = COALESCE(\n             (SELECT SUM(ap.puntos_ganados) FROM apuestas_partidos ap WHERE ap.usuario_id = u.id), 0)\n             + u.puntos_predictor",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "10aed1bbe96a57b9b92a3b0ed5ec12336a7625ead09e34ddfd149d082432986e"
+}
