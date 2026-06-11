@@ -7,11 +7,11 @@
   Colores de marca: naranja #FF6B00 sobre azul noche #0E1E47. Estilo deportivo y festivo. ⚽
 -->
 
-# 🏆 Polla Copa FIFA 2026
+# 🏆 Conecta Mundialista 2026
 
 ### ¡Demuestra que sabes de fútbol y gana!
 
-Bienvenido a la polla mundialista de la empresa. Arma tu Mundial, predice los
+Bienvenido a la quiniela mundialista de la empresa. Arma tu Mundial, predice los
 marcadores y compite con todos tus compañeros por el primer lugar.
 
 *Una guía rápida para empezar a jugar.*

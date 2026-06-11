@@ -1,6 +1,6 @@
-# Conecta · Predictor Copa FIFA 2026
+# Conecta Mundialista 2026
 
-Polla/quiniela mundialista corporativa para la **Copa FIFA 2026**. Cada usuario:
+Quiniela mundialista corporativa para el **Mundial 2026**. Cada usuario:
 
 1. **Arma su Mundial** (Predictor): ordena los 12 grupos, elige los 8 mejores terceros y llena el bracket hasta el campeón.
 2. **Apuesta marcadores** partido a partido (Calendario), con datos reales de la API.

@@ -1,7 +1,7 @@
 {
-  "name": "Conecta · Predictor Copa FIFA 2026",
-  "short_name": "Copa FIFA 26",
-  "description": "Polla de la Copa FIFA 2026 de Conecta",
+  "name": "Conecta Mundialista 2026",
+  "short_name": "Mundialista 26",
+  "description": "Predice el Mundial 2026 con Conecta",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,4 +1,4 @@
-# Cómo funciona la app · Conecta Predictor Copa FIFA 2026
+# Cómo funciona la app · Conecta Mundialista 2026
 
 Documento funcional: explica el puntaje, los bloqueos por tiempo, el guardado de
 apuestas, la sincronización de resultados y el ranking. Pensado para entender el
