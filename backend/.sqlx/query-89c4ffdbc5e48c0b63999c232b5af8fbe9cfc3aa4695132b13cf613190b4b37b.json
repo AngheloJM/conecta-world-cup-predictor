@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE usuarios SET es_admin = true WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89c4ffdbc5e48c0b63999c232b5af8fbe9cfc3aa4695132b13cf613190b4b37b"
+}

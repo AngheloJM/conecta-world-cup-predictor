@@ -87,6 +87,14 @@ fn err(code: StatusCode, msg: &str) -> (StatusCode, Json<ApiError>) {
     (code, Json(ApiError::new(msg)))
 }
 
+/// ¿El email corresponde al admin configurado en la variable ADMIN_EMAIL?
+fn es_admin_email(email: &str) -> bool {
+    std::env::var("ADMIN_EMAIL")
+        .ok()
+        .map(|a| a.trim().to_lowercase() == email)
+        .unwrap_or(false)
+}
+
 // ------------------------------------------------------------ Extractor de usuario autenticado
 pub struct AuthUser {
     pub id: i64,
@@ -130,8 +138,8 @@ pub async fn register(
     Json(body): Json<RegisterReq>,
 ) -> impl IntoResponse {
     let email = body.email.trim().to_lowercase();
-    if body.nombre.trim().is_empty() || email.is_empty() || body.password.len() < 6 {
-        return err(StatusCode::BAD_REQUEST, "Nombre, email y contraseña (mín. 6) son obligatorios").into_response();
+    if body.nombre.trim().is_empty() || email.is_empty() || body.password.len() < 8 {
+        return err(StatusCode::BAD_REQUEST, "Nombre, email y contraseña (mín. 8) son obligatorios").into_response();
     }
 
     let hash = match hash_password(&body.password) {
@@ -139,16 +147,20 @@ pub async fn register(
         Err(_) => return err(StatusCode::INTERNAL_SERVER_ERROR, "No se pudo procesar la contraseña").into_response(),
     };
 
+    // El usuario cuyo email coincide con ADMIN_EMAIL se crea como administrador.
+    let es_admin = es_admin_email(&email);
+
     let row = sqlx::query!(
         r#"
-        INSERT INTO usuarios (nombre, email, password_hash, nombre_equipo)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO usuarios (nombre, email, password_hash, nombre_equipo, es_admin)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id, nombre, email, nombre_equipo, es_admin, puntos_totales
         "#,
         body.nombre.trim(),
         email,
         hash,
         body.nombre_equipo.as_deref(),
+        es_admin,
     )
     .fetch_one(&st.pool)
     .await;
@@ -217,6 +229,15 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
         return err(StatusCode::UNAUTHORIZED, "Correo o contraseña incorrectos").into_response();
     }
 
+    // Promueve a admin si el email coincide con ADMIN_EMAIL (y aún no lo es).
+    let mut es_admin = user.es_admin;
+    if es_admin_email(&email) && !es_admin {
+        let _ = sqlx::query!("UPDATE usuarios SET es_admin = true WHERE id = $1", user.id)
+            .execute(&st.pool)
+            .await;
+        es_admin = true;
+    }
+
     let token = match make_token(user.id, &st.jwt_secret) {
         Ok(t) => t,
         Err(_) => return err(StatusCode::INTERNAL_SERVER_ERROR, "No se pudo emitir el token").into_response(),
@@ -231,7 +252,7 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
                 nombre: user.nombre,
                 email: user.email,
                 nombre_equipo: user.nombre_equipo,
-                es_admin: user.es_admin,
+                es_admin,
                 puntos_totales: user.puntos_totales,
             },
         }),

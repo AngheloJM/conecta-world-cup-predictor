@@ -173,8 +173,20 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    // CORS abierto (auth por Bearer token, sin cookies) — restringir origen en producción.
-    let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
+    // CORS: en producción restringido a los orígenes de CORS_ORIGINS (coma-separados);
+    // sin esa variable (desarrollo local) permite cualquier origen.
+    let cors = match std::env::var("CORS_ORIGINS") {
+        Ok(s) if !s.trim().is_empty() => {
+            let origins: Vec<axum::http::HeaderValue> =
+                s.split(',').filter_map(|o| o.trim().parse().ok()).collect();
+            tracing::info!("CORS restringido a: {s}");
+            CorsLayer::new().allow_origin(origins).allow_methods(Any).allow_headers(Any)
+        }
+        _ => {
+            tracing::warn!("CORS_ORIGINS no definido: se permite cualquier origen (solo desarrollo)");
+            CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any)
+        }
+    };
 
     let app = Router::new()
         .route("/health", get(health))
