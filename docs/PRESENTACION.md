@@ -103,6 +103,8 @@ En la pestaña **Calendario** predices el resultado exacto de cada partido.
 - Se guarda automáticamente
 - Puedes cambiarlo… **hasta que empiece el partido**
 
+![Calendario con un partido y sus casillas de marcador](img/calendario.png)
+
 
 ---
 
