@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE usuarios u SET puntos_predictor = v.b\n               FROM (SELECT unnest($1::bigint[]) AS id, unnest($2::int[]) AS b) v\n               WHERE u.id = v.id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "554fe2bc7e2cb903624fc81c5e1753465df7d61d15abfeb3e07354429464c40e"
+}

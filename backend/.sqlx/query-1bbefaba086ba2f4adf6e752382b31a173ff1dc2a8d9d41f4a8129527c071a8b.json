@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE usuarios u\n           SET c_exactos = s.e, c_diferencias = s.d, c_simples = s.s\n           FROM (SELECT usuario_id,\n                   COUNT(*) FILTER (WHERE puntos_ganados = 10)::int AS e,\n                   COUNT(*) FILTER (WHERE puntos_ganados = 7)::int  AS d,\n                   COUNT(*) FILTER (WHERE puntos_ganados = 5)::int  AS s\n                 FROM apuestas_partidos GROUP BY usuario_id) s\n           WHERE s.usuario_id = u.id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "1bbefaba086ba2f4adf6e752382b31a173ff1dc2a8d9d41f4a8129527c071a8b"
+}

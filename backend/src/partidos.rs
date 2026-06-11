@@ -11,7 +11,6 @@ use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 
 use crate::auth::AuthUser;
-use crate::scoring::calcular_puntos;
 use crate::{ApiError, AppState};
 
 // ---------- Mapeo de la respuesta de football-data.org ----------
@@ -144,43 +143,61 @@ pub async fn sincronizar(pool: &PgPool, token: &str) -> Result<(i64, usize), Str
 //  puntúa todas sus apuestas y suma a usuarios.puntos_totales.
 // ============================================================
 pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
-    let partidos = sqlx::query!(
-        r#"SELECT id, goles_local, goles_visitante
-           FROM partidos
-           WHERE estado = 'Finalizado' AND goles_local IS NOT NULL AND goles_visitante IS NOT NULL"#
+    // 1. Puntos de TODAS las apuestas en UNA sola query (CASE), no N+1.
+    //    Misma lógica que scoring::calcular_puntos (10/7/5/2/0).
+    sqlx::query!(
+        r#"
+        UPDATE apuestas_partidos ap SET puntos_ganados = (CASE
+            WHEN ap.prediccion_local = p.goles_local AND ap.prediccion_visitante = p.goles_visitante THEN 10
+            WHEN p.goles_local <> p.goles_visitante
+                 AND (p.goles_local - p.goles_visitante) = (ap.prediccion_local - ap.prediccion_visitante) THEN 7
+            WHEN (p.goles_local > p.goles_visitante AND ap.prediccion_local > ap.prediccion_visitante)
+              OR (p.goles_local < p.goles_visitante AND ap.prediccion_local < ap.prediccion_visitante)
+              OR (p.goles_local = p.goles_visitante AND ap.prediccion_local = ap.prediccion_visitante) THEN 5
+            WHEN ap.prediccion_local = p.goles_local OR ap.prediccion_visitante = p.goles_visitante THEN 2
+            ELSE 0
+        END)::smallint
+        FROM partidos p
+        WHERE ap.partido_id = p.id AND p.estado = 'Finalizado'
+              AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL
+        "#
     )
-    .fetch_all(pool)
+    .execute(pool)
     .await?;
 
-    for p in &partidos {
-        let gl = p.goles_local.unwrap_or(0) as i32;
-        let gv = p.goles_visitante.unwrap_or(0) as i32;
-
-        let apuestas = sqlx::query!(
-            r#"SELECT id, prediccion_local, prediccion_visitante FROM apuestas_partidos WHERE partido_id = $1"#,
-            p.id
-        )
-        .fetch_all(pool)
-        .await?;
-
-        for a in &apuestas {
-            let pts = calcular_puntos(gl, gv, a.prediccion_local as i32, a.prediccion_visitante as i32) as i16;
-            sqlx::query!("UPDATE apuestas_partidos SET puntos_ganados = $1 WHERE id = $2", pts, a.id)
-                .execute(pool)
-                .await?;
-        }
-    }
-
-    // Bonus del predictor (campeón, finalistas, posiciones de grupo, terceros).
+    // 2. Bonus del predictor (en memoria) → escritura en LOTE con unnest.
     let bonus = bonus_predictor(pool).await?;
     sqlx::query!("UPDATE usuarios SET puntos_predictor = 0").execute(pool).await?;
-    for (uid, b) in &bonus {
-        sqlx::query!("UPDATE usuarios SET puntos_predictor = $1 WHERE id = $2", b, uid)
-            .execute(pool)
-            .await?;
+    if !bonus.is_empty() {
+        let ids: Vec<i64> = bonus.keys().copied().collect();
+        let vals: Vec<i32> = ids.iter().map(|id| bonus[id]).collect();
+        sqlx::query!(
+            r#"UPDATE usuarios u SET puntos_predictor = v.b
+               FROM (SELECT unnest($1::bigint[]) AS id, unnest($2::int[]) AS b) v
+               WHERE u.id = v.id"#,
+            &ids,
+            &vals,
+        )
+        .execute(pool)
+        .await?;
     }
 
-    // Total de cada usuario = apuestas por partido + bonus del predictor.
+    // 3. Conteos de desempate materializados (una pasada).
+    sqlx::query!("UPDATE usuarios SET c_exactos = 0, c_diferencias = 0, c_simples = 0").execute(pool).await?;
+    sqlx::query!(
+        r#"UPDATE usuarios u
+           SET c_exactos = s.e, c_diferencias = s.d, c_simples = s.s
+           FROM (SELECT usuario_id,
+                   COUNT(*) FILTER (WHERE puntos_ganados = 10)::int AS e,
+                   COUNT(*) FILTER (WHERE puntos_ganados = 7)::int  AS d,
+                   COUNT(*) FILTER (WHERE puntos_ganados = 5)::int  AS s
+                 FROM apuestas_partidos GROUP BY usuario_id) s
+           WHERE s.usuario_id = u.id"#
+    )
+    .execute(pool)
+    .await?;
+
+    // 4. Total = apuestas + bonus del predictor.
     sqlx::query!(
         r#"UPDATE usuarios u SET puntos_totales = COALESCE(
              (SELECT SUM(ap.puntos_ganados) FROM apuestas_partidos ap WHERE ap.usuario_id = u.id), 0)
@@ -189,7 +206,11 @@ pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
     .execute(pool)
     .await?;
 
-    Ok(partidos.len() as i64)
+    let fin = sqlx::query_scalar!("SELECT COUNT(*) FROM partidos WHERE estado = 'Finalizado'")
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+    Ok(fin)
 }
 
 // ============================================================

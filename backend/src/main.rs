@@ -59,24 +59,20 @@ struct RankRow {
     nombre_equipo: Option<String>,
     puntos: i32,
     predictor: i32,
-    exactos: i64,
-    diferencias: i64,
-    simples: i64,
+    exactos: i32,
+    diferencias: i32,
+    simples: i32,
 }
 
 #[utoipa::path(get, path = "/ranking", tag = "ranking",
     responses((status = 200, description = "Tabla de posiciones", body = [RankRow])))]
 async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
-    // Desempate jerárquico: puntos → más exactos (10) → más diferencias (7) → más simples (5) → registro más antiguo.
+    // Desempate jerárquico (conteos materializados en recalcular_puntos): sin GROUP BY ni JOIN.
     let rows = sqlx::query!(
-        r#"SELECT u.id, u.nombre, u.nombre_equipo, u.puntos_totales, u.puntos_predictor,
-                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 10) AS "exactos!",
-                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 7)  AS "diferencias!",
-                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 5)  AS "simples!"
-           FROM usuarios u
-           LEFT JOIN apuestas_partidos ap ON ap.usuario_id = u.id
-           GROUP BY u.id, u.nombre, u.nombre_equipo, u.puntos_totales, u.puntos_predictor, u.fecha_registro
-           ORDER BY u.puntos_totales DESC, "exactos!" DESC, "diferencias!" DESC, "simples!" DESC, u.fecha_registro ASC
+        r#"SELECT id, nombre, nombre_equipo, puntos_totales, puntos_predictor,
+                  c_exactos, c_diferencias, c_simples
+           FROM usuarios
+           ORDER BY puntos_totales DESC, c_exactos DESC, c_diferencias DESC, c_simples DESC, fecha_registro ASC
            LIMIT 100"#
     )
     .fetch_all(&state.pool)
@@ -94,9 +90,9 @@ async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
                     nombre_equipo: r.nombre_equipo,
                     puntos: r.puntos_totales,
                     predictor: r.puntos_predictor,
-                    exactos: r.exactos,
-                    diferencias: r.diferencias,
-                    simples: r.simples,
+                    exactos: r.c_exactos,
+                    diferencias: r.c_diferencias,
+                    simples: r.c_simples,
                 })
                 .collect();
             (StatusCode::OK, Json(out)).into_response()
@@ -170,7 +166,11 @@ async fn main() -> anyhow::Result<()> {
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "dev-secret-cambiar-en-produccion".into());
 
-    let pool = PgPoolOptions::new().max_connections(10).connect(&db_url).await?;
+    let pool = PgPoolOptions::new()
+        .max_connections(20)
+        .idle_timeout(std::time::Duration::from_secs(120)) // libera conexiones para que Neon pueda suspender
+        .connect(&db_url)
+        .await?;
 
     // Aplica las migraciones al arrancar (crea las tablas si no existen).
     sqlx::migrate!("./migrations").run(&pool).await?;

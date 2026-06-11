@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE apuestas_partidos ap SET puntos_ganados = (CASE\n            WHEN ap.prediccion_local = p.goles_local AND ap.prediccion_visitante = p.goles_visitante THEN 10\n            WHEN p.goles_local <> p.goles_visitante\n                 AND (p.goles_local - p.goles_visitante) = (ap.prediccion_local - ap.prediccion_visitante) THEN 7\n            WHEN (p.goles_local > p.goles_visitante AND ap.prediccion_local > ap.prediccion_visitante)\n              OR (p.goles_local < p.goles_visitante AND ap.prediccion_local < ap.prediccion_visitante)\n              OR (p.goles_local = p.goles_visitante AND ap.prediccion_local = ap.prediccion_visitante) THEN 5\n            WHEN ap.prediccion_local = p.goles_local OR ap.prediccion_visitante = p.goles_visitante THEN 2\n            ELSE 0\n        END)::smallint\n        FROM partidos p\n        WHERE ap.partido_id = p.id AND p.estado = 'Finalizado'\n              AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "416e77bbb00fe8edb121f6922a8dc93f3266eb570658a59540dea89c11b9e5cb"
+}
