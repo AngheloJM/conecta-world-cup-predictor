@@ -63,6 +63,8 @@ En la pestaña **Predictor** ordenas los 12 grupos como crees que quedarán.
 - El **1.º y 2.º** de cada grupo avanzan directo
 - Acomódalos del 1.º al 4.º según tu pronóstico
 
+![Fase de grupos del Predictor](img/fase_grupos.png)
+
 
 ---
 
@@ -74,6 +76,8 @@ terceros lugares**.
 - Marca los **8 grupos** cuyo tercer lugar crees que clasificará
 - Esos equipos entran al bracket
 
+![Selección de los mejores terceros](img/mejores_terceros.png)
+
 
 ---
 
@@ -83,6 +87,8 @@ Llena la llave de eliminación: octavos, cuartos, semifinal y **la gran final**.
 
 - Ve eligiendo quién avanza en cada ronda
 - Al final, **corona a tu campeón** 🏆
+
+![Bracket / llave de eliminación](img/bracket.png)
 
 
 > Se guarda solo. Verás un "Guardado ✓" cada vez.
@@ -159,6 +165,8 @@ Mira en qué lugar vas contra toda la empresa.
 - 🥇🥈🥉 Podio con los 3 primeros
 - Tu posición resaltada
 - Se actualiza **solo**, conforme terminan los partidos
+
+![Tablero / ranking con el podio](img/tablero.png)
 
 
 ---
