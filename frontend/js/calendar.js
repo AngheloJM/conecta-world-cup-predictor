@@ -27,9 +27,14 @@ function crestImg(url, cod) {
     : `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white/10 text-white/70">${cod || '—'}</span>`;
 }
 
+// Ventana "en vivo": desde el saque inicial hasta ~2.5 h después (90' + descanso + descuento).
+const LIVE_MS = 150 * 60 * 1000;
+
 function matchRow(p) {
   const start = new Date(p.fecha_hora);
+  const ahora = Date.now();
   const finalizado = p.estado === 'Finalizado';
+  const enVivo = !finalizado && ahora >= start.getTime() && ahora - start.getTime() <= LIVE_MS;
   const cerrado = finalizado || start <= new Date();
   const ap = APUESTAS[p.id];
   const bl = ap && ap.prediccion_local != null ? ap.prediccion_local : '';
@@ -52,15 +57,24 @@ function matchRow(p) {
   if (finalizado) {
     const tuyo = ap ? ` · Tu: ${ap.prediccion_local}-${ap.prediccion_visitante} → <span class="text-white">${ap.puntos_ganados} pts</span>` : '';
     pie = `<span class="text-[10px] font-bold text-acento">FINALIZADO</span><span class="text-[10px] text-blue-200/70">${tuyo}</span>`;
-  } else if (cerrado) {
+  } else if (cerrado && !enVivo) {
     pie = '<span class="text-[10px] text-blue-200/60">Cerrado · ya inició</span>';
   }
+
+  // Esquina superior derecha: chip EN VIVO con punto pulsante, o la hora + sede.
+  const derecha = enVivo
+    ? `<span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-green-400">
+         <span class="relative flex h-2 w-2">
+           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+           <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+         </span>EN VIVO</span>`
+    : `<span class="text-[11px] text-blue-200/70 truncate max-w-[55%] text-right">${hora}${p.venue ? ' · ' + p.venue : ''}</span>`;
 
   return `
     <div class="rounded-xl border border-white/10 bg-white/5 p-3">
       <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-bold uppercase tracking-wide text-acento bg-acento/15 rounded px-2 py-0.5">${etiqueta}</span>
-        <span class="text-[11px] text-blue-200/70 truncate max-w-[55%] text-right">${hora}${p.venue ? ' · ' + p.venue : ''}</span>
+        ${derecha}
       </div>
       <div class="space-y-1.5">
         ${fila(tName(p.equipo_local), p.crest_local, p.local_cod, 'l', p.goles_local, bl)}
@@ -119,3 +133,13 @@ calendarEl.addEventListener('input', e => {
   }, 700);
 });
 calPhaseEl.addEventListener('change', renderCalendar);
+
+// Refresco periódico para que el estado "EN VIVO" aparezca/desaparezca solo.
+// No repinta si la vista está oculta ni si el usuario está escribiendo un marcador.
+setInterval(() => {
+  const view = document.getElementById('view-calendario');
+  if (!view || view.classList.contains('hidden')) return;
+  const ae = document.activeElement;
+  if (ae && ae.closest && ae.closest('#calendar')) return;
+  renderCalendar();
+}, 60000);
