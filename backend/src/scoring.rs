@@ -5,6 +5,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Fase {
     Grupos,
+    Dieciseisavos,
     Octavos,
     Cuartos,
     Semifinal,
@@ -16,6 +17,7 @@ impl Fase {
     pub fn from_db(s: &str) -> Option<Self> {
         match s {
             "Grupos" => Some(Fase::Grupos),
+            "Dieciseisavos" => Some(Fase::Dieciseisavos),
             "Octavos" => Some(Fase::Octavos),
             "Cuartos" => Some(Fase::Cuartos),
             "Semifinal" => Some(Fase::Semifinal),
@@ -33,15 +35,15 @@ fn signo(local: i32, visitante: i32) -> i32 {
 
 /// Algoritmo de cálculo de puntos escalados. **Función pura**.
 ///
-/// - Resultado exacto:  Grupos +5 · Octavos/Cuartos +8 · Semifinal/Final +11
-/// - Ganador / empate:  Grupos +3 · Octavos/Cuartos +5 · Semifinal/Final +7
+/// - Resultado exacto:  Grupos +5 · 16vos/8vos/4tos +8 · Semifinal/Final +11
+/// - Ganador / empate:  Grupos +3 · 16vos/8vos/4tos +5 · Semifinal/Final +7
 /// - No acertó:         0
 pub fn calcular_puntos(goles_l: i32, goles_v: i32, pred_l: i32, pred_v: i32, fase: Fase) -> u8 {
     // 1. Marcador exacto: máxima recompensa.
     if goles_l == pred_l && goles_v == pred_v {
         return match fase {
             Fase::Grupos => 5,
-            Fase::Octavos | Fase::Cuartos => 8,
+            Fase::Dieciseisavos | Fase::Octavos | Fase::Cuartos => 8,
             Fase::Semifinal | Fase::Final => 11,
         };
     }
@@ -50,7 +52,7 @@ pub fn calcular_puntos(goles_l: i32, goles_v: i32, pred_l: i32, pred_v: i32, fas
     if signo(goles_l, goles_v) == signo(pred_l, pred_v) {
         return match fase {
             Fase::Grupos => 3,
-            Fase::Octavos | Fase::Cuartos => 5,
+            Fase::Dieciseisavos | Fase::Octavos | Fase::Cuartos => 5,
             Fase::Semifinal | Fase::Final => 7,
         };
     }

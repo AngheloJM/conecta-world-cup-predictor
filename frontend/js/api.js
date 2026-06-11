@@ -40,5 +40,6 @@ const api = {
   saveSimulacion: (body) => apiFetch('/simulacion', { method: 'PUT', body: JSON.stringify(body) }),
   getPartidos: () => apiFetch('/partidos'),
   getRanking: () => apiFetch('/ranking'),
-  // Futuro (paso 4c): getResultados...
+  getApuestas: () => apiFetch('/apuestas'),
+  saveApuesta: (partidoId, l, v) => apiFetch('/apuestas', { method: 'POST', body: JSON.stringify({ partido_id: partidoId, prediccion_local: l, prediccion_visitante: v }) }),
 };

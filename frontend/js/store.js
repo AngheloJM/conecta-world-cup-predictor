@@ -7,7 +7,6 @@ const S = {
   thirds: new Set(),                 // letras de grupo cuyos 3.º clasifican (máx 8)
   r32: Array(16).fill(null), r16: Array(8).fill(null),
   qf: Array(4).fill(null), sf: Array(2).fill(null), f: null,
-  bets: {},                          // id de partido -> { l, v }
   nombre: '',
 };
 
@@ -17,16 +16,16 @@ function resetBracket() {
 }
 
 // Convierte el estado actual a un objeto plano (para localStorage y servidor).
+// Solo la simulación (grupos + terceros + bracket); las apuestas por partido
+// van aparte, en apuestas_partidos (relacional).
 function serializeState() {
-  const bets = {};
-  for (const [id, b] of Object.entries(S.bets)) if (b && (b.l || b.v)) bets[id] = b;
   return {
     groups: Object.fromEntries(Object.entries(GROUPS).map(([g, a]) => [g, a.map(x => x.name)])),
     thirds: [...S.thirds],
     r32: S.r32.map(x => x ? x.name : null), r16: S.r16.map(x => x ? x.name : null),
     qf: S.qf.map(x => x ? x.name : null), sf: S.sf.map(x => x ? x.name : null),
     f: S.f ? S.f.name : null,
-    bets, nombre: S.nombre,
+    nombre: S.nombre,
   };
 }
 
@@ -44,7 +43,6 @@ function applyState(s) {
   const map = (arr, n) => { const r = (arr || []).map(x => x ? NAME2TEAM[x] : null); while (r.length < n) r.push(null); return r; };
   S.r32 = map(s.r32, 16); S.r16 = map(s.r16, 8); S.qf = map(s.qf, 4); S.sf = map(s.sf, 2);
   S.f = s.f ? NAME2TEAM[s.f] : null;
-  S.bets = s.bets || {};
   S.nombre = s.nombre || '';
 }
 

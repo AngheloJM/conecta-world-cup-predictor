@@ -47,6 +47,7 @@ function enterApp(user) {
   userName.textContent = user.nombre;
   document.getElementById('save-btn').disabled = false;
   loadUserPrediction();
+  loadApuestas();   // apuestas por partido (relacional) en el calendario
 }
 
 // Trae la predicción guardada del usuario y la pinta (si existe).

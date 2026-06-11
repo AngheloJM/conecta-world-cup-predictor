@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE apuestas_partidos SET puntos_ganados = $1 WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int2",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "300dbc6d0abae1bf2d8822ed14b2a64251c5643c4c6c8c711894bf4db00e2c3c"
+}

@@ -1,6 +1,7 @@
 //! Polla Mundialista "Conecta" · Backend Axum.
 //! Auth (registro/login + JWT), candado de tiempo en apuestas y cálculo de puntos.
 
+mod apuestas;
 mod auth;
 mod partidos;
 mod scoring;
@@ -13,14 +14,11 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use utoipa::{OpenApi, ToSchema};
-
-use auth::AuthUser;
 
 // ------------------------------------------------------------ Estado y error compartidos
 #[derive(Clone)]
@@ -36,89 +34,6 @@ pub struct ApiError {
 impl ApiError {
     pub fn new(msg: impl Into<String>) -> Self {
         Self { error: msg.into() }
-    }
-}
-
-// ------------------------------------------------------------ Apuesta por partido (candado de tiempo)
-#[derive(Debug, Deserialize, ToSchema)]
-struct NuevaApuesta {
-    partido_id: i64,
-    prediccion_local: i16,
-    prediccion_visitante: i16,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-struct ApuestaCreada {
-    id: i64,
-    mensaje: String,
-}
-
-#[utoipa::path(
-    post, path = "/apuestas", tag = "apuestas",
-    security(("bearerAuth" = [])),
-    request_body = NuevaApuesta,
-    responses(
-        (status = 200, description = "Apuesta guardada", body = ApuestaCreada),
-        (status = 400, description = "Apuesta cerrada o inválida", body = ApiError),
-        (status = 404, description = "Partido no encontrado", body = ApiError),
-    )
-)]
-async fn crear_apuesta(
-    user: AuthUser,
-    State(state): State<AppState>,
-    Json(body): Json<NuevaApuesta>,
-) -> impl IntoResponse {
-    if body.prediccion_local < 0 || body.prediccion_visitante < 0 {
-        return (StatusCode::BAD_REQUEST, Json(ApiError::new("El marcador no puede ser negativo"))).into_response();
-    }
-
-    let partido = sqlx::query!(
-        r#"SELECT fecha_hora FROM partidos WHERE id = $1"#,
-        body.partido_id
-    )
-    .fetch_optional(&state.pool)
-    .await;
-
-    let partido = match partido {
-        Ok(Some(p)) => p,
-        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError::new("Partido no encontrado"))).into_response(),
-        Err(e) => {
-            tracing::error!("DB error: {e}");
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("Error de base de datos"))).into_response();
-        }
-    };
-
-    // ----- CANDADO: el partido no debe haber iniciado -----
-    let ahora: DateTime<Utc> = Utc::now();
-    if ahora >= partido.fecha_hora {
-        return (StatusCode::BAD_REQUEST, Json(ApiError::new("Las apuestas están cerradas: el partido ya inició"))).into_response();
-    }
-
-    // Upsert: permite modificar la apuesta mientras no haya iniciado el partido.
-    let inserted = sqlx::query!(
-        r#"
-        INSERT INTO apuestas_partidos (usuario_id, partido_id, prediccion_local, prediccion_visitante)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (usuario_id, partido_id)
-        DO UPDATE SET prediccion_local = EXCLUDED.prediccion_local,
-                      prediccion_visitante = EXCLUDED.prediccion_visitante,
-                      fecha_apuesta = now()
-        RETURNING id
-        "#,
-        user.id,
-        body.partido_id,
-        body.prediccion_local,
-        body.prediccion_visitante,
-    )
-    .fetch_one(&state.pool)
-    .await;
-
-    match inserted {
-        Ok(row) => (StatusCode::OK, Json(ApuestaCreada { id: row.id, mensaje: "Apuesta guardada".into() })).into_response(),
-        Err(e) => {
-            tracing::error!("DB insert error: {e}");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiError::new("No se pudo registrar la apuesta"))).into_response()
-        }
     }
 }
 
@@ -173,11 +88,11 @@ async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
 #[derive(OpenApi)]
 #[openapi(
     info(title = "Conecta · World Cup Predictor API", version = "0.1.0", description = "API de la polla mundialista: autenticación y apuestas."),
-    paths(auth::register, auth::login, auth::me, sim::guardar, sim::obtener, ranking, crear_apuesta, health),
+    paths(auth::register, auth::login, auth::me, sim::guardar, sim::obtener, ranking, apuestas::crear, apuestas::listar, health),
     components(schemas(
         auth::RegisterReq, auth::LoginReq, auth::AuthResp, auth::UsuarioOut,
         sim::GuardarSim, sim::SimOut, RankRow,
-        ApiError, NuevaApuesta, ApuestaCreada
+        ApiError, apuestas::NuevaApuesta, apuestas::ApuestaCreada, apuestas::ApuestaOut
     )),
     modifiers(&SecurityAddon),
     tags(
@@ -238,6 +153,26 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState { pool, jwt_secret };
 
+    // Auto-sync: sincroniza resultados de la API cada 15 min (y al arrancar).
+    {
+        let pool = state.pool.clone();
+        let token = std::env::var("FOOTBALL_DATA_TOKEN").unwrap_or_default();
+        tokio::spawn(async move {
+            if token.is_empty() {
+                tracing::warn!("Sin FOOTBALL_DATA_TOKEN: auto-sync deshabilitado");
+                return;
+            }
+            let mut intervalo = tokio::time::interval(std::time::Duration::from_secs(900));
+            loop {
+                intervalo.tick().await; // primer tick inmediato → sincroniza al arrancar
+                match partidos::sincronizar(&pool, &token).await {
+                    Ok((g, r)) => tracing::info!("auto-sync: {g}/{r} partidos"),
+                    Err(e) => tracing::error!("auto-sync error: {e}"),
+                }
+            }
+        });
+    }
+
     // CORS abierto (auth por Bearer token, sin cookies) — restringir origen en producción.
     let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
 
@@ -249,8 +184,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/simulacion", get(sim::obtener).put(sim::guardar))
         .route("/partidos", get(partidos::listar))
         .route("/ranking", get(ranking))
+        .route("/apuestas", get(apuestas::listar).post(apuestas::crear))
         .route("/admin/sync", post(partidos::sync))
-        .route("/apuestas", post(crear_apuesta))
+        .route("/admin/recalcular", post(partidos::recalcular))
         .route("/openapi.json", get(openapi_json))
         .route("/docs", get(docs_ui))
         .layer(cors)

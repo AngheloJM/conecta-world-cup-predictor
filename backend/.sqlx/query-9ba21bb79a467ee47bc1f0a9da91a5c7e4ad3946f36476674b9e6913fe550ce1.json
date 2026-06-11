@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT partido_id, prediccion_local, prediccion_visitante, puntos_ganados\n           FROM apuestas_partidos WHERE usuario_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "partido_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "prediccion_local",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 2,
+        "name": "prediccion_visitante",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 3,
+        "name": "puntos_ganados",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9ba21bb79a467ee47bc1f0a9da91a5c7e4ad3946f36476674b9e6913fe550ce1"
+}

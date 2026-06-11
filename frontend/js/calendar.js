@@ -1,13 +1,25 @@
 // ============================================================
-//  CALENDARIO · partidos reales (GET /partidos de football-data.org)
-//  Depende de: data.js (PHASES), store.js (S, saveState), api.js (api)
+//  CALENDARIO · partidos reales + apuestas relacionales (apuestas_partidos)
+//  Depende de: data.js (PHASES, PARTIDOS, tName), api.js (api)
 // ============================================================
 
 const calendarEl = document.getElementById('calendar');
 const calPhaseEl = document.getElementById('cal-phase');
 
-// Llena el selector de fases una vez (PARTIDOS se carga en main.js → bootstrapData).
+// Apuestas del usuario: partido_id -> { prediccion_local, prediccion_visitante, puntos_ganados }
+let APUESTAS = {};
+
 calPhaseEl.innerHTML = PHASES.map(p => `<option value="${p}">${p === 'Todas' ? 'Todas las fases' : p}</option>`).join('');
+
+// Carga las apuestas del usuario autenticado (tras iniciar sesión) y repinta.
+async function loadApuestas() {
+  try {
+    const list = await api.getApuestas();
+    APUESTAS = {};
+    list.forEach(a => { APUESTAS[a.partido_id] = a; });
+  } catch (_) { APUESTAS = {}; }
+  renderCalendar();
+}
 
 function crestImg(url, cod) {
   return url
@@ -19,13 +31,13 @@ function matchRow(p) {
   const start = new Date(p.fecha_hora);
   const finalizado = p.estado === 'Finalizado';
   const cerrado = finalizado || start <= new Date();
-  const bl = (S.bets[p.id] && S.bets[p.id].l) || '';
-  const bv = (S.bets[p.id] && S.bets[p.id].v) || '';
+  const ap = APUESTAS[p.id];
+  const bl = ap && ap.prediccion_local != null ? ap.prediccion_local : '';
+  const bv = ap && ap.prediccion_visitante != null ? ap.prediccion_visitante : '';
   const hora = start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   const etiqueta = p.grupo ? `Grupo ${p.grupo}` : p.fase;
   const inpCls = 'w-10 h-9 text-center font-bold text-white bg-white/10 border border-white/20 rounded-lg disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-acento/40 focus:border-acento';
 
-  // Una fila por equipo (estilo fixture): escudo + nombre (ancho completo) + marcador.
   const fila = (name, crest, cod, side, goles, bet) => `
     <div class="flex items-center gap-2">
       ${crestImg(crest, cod)}
@@ -35,9 +47,14 @@ function matchRow(p) {
         : `<input type="number" min="0" max="20" data-bet="${p.id}" data-side="${side}" value="${bet}" placeholder="0" class="${inpCls}" ${cerrado ? 'disabled' : ''} />`}
     </div>`;
 
-  const aviso = finalizado
-    ? '<span class="text-[10px] font-bold text-acento">FINALIZADO</span>'
-    : (cerrado ? '<span class="text-[10px] text-blue-200/60">Cerrado · ya inició</span>' : '');
+  // Pie: finalizado muestra tu predicción + puntos; cerrado muestra aviso.
+  let pie = '';
+  if (finalizado) {
+    const tuyo = ap ? ` · Tu: ${ap.prediccion_local}-${ap.prediccion_visitante} → <span class="text-white">${ap.puntos_ganados} pts</span>` : '';
+    pie = `<span class="text-[10px] font-bold text-acento">FINALIZADO</span><span class="text-[10px] text-blue-200/70">${tuyo}</span>`;
+  } else if (cerrado) {
+    pie = '<span class="text-[10px] text-blue-200/60">Cerrado · ya inició</span>';
+  }
 
   return `
     <div class="rounded-xl border border-white/10 bg-white/5 p-3">
@@ -49,7 +66,7 @@ function matchRow(p) {
         ${fila(tName(p.equipo_local), p.crest_local, p.local_cod, 'l', p.goles_local, bl)}
         ${fila(tName(p.equipo_visitante), p.crest_visitante, p.visitante_cod, 'v', p.goles_visitante, bv)}
       </div>
-      ${aviso ? `<div class="text-right mt-1.5">${aviso}</div>` : ''}
+      ${pie ? `<div class="text-right mt-1.5">${pie}</div>` : ''}
     </div>`;
 }
 
@@ -65,7 +82,6 @@ function renderCalendar() {
     return;
   }
 
-  // Agrupar por día (vienen ordenados por fecha desde el backend).
   const byDay = new Map();
   for (const p of list) {
     const key = new Date(p.fecha_hora).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -83,14 +99,20 @@ function renderCalendar() {
     </div>`).join('');
 }
 
-// Inputs de marcador -> estado + persistencia (se auto-guarda en el servidor).
+// Inputs de marcador -> POST /apuestas (debounced por partido; con candado de tiempo en el backend).
+const _betTimers = {};
 calendarEl.addEventListener('input', e => {
   const inp = e.target.closest('[data-bet]'); if (!inp) return;
-  const id = inp.dataset.bet;
-  const cur = S.bets[id] || { l: '', v: '' };
-  cur[inp.dataset.side] = inp.value;
-  if (!cur.l && !cur.v) delete S.bets[id];
-  else S.bets[id] = cur;
-  saveState();
+  const id = +inp.dataset.bet;
+  const ap = APUESTAS[id] || { partido_id: id, prediccion_local: null, prediccion_visitante: null, puntos_ganados: 0 };
+  const val = inp.value === '' ? null : parseInt(inp.value, 10);
+  if (inp.dataset.side === 'l') ap.prediccion_local = val; else ap.prediccion_visitante = val;
+  APUESTAS[id] = ap;
+
+  clearTimeout(_betTimers[id]);
+  _betTimers[id] = setTimeout(() => {
+    if (ap.prediccion_local == null || ap.prediccion_visitante == null) return; // se requieren ambos
+    api.saveApuesta(id, ap.prediccion_local, ap.prediccion_visitante).catch(() => {});
+  }, 700);
 });
 calPhaseEl.addEventListener('change', renderCalendar);
