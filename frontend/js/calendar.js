@@ -72,7 +72,10 @@ function matchRow(p) {
 
 function renderCalendar() {
   if (!PARTIDOS.length) {
-    calendarEl.innerHTML = '<p class="text-sm text-blue-200 py-6 text-center">Cargando partidos…</p>';
+    calendarEl.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">' +
+      Array.from({ length: 8 }).map(() =>
+        '<div class="rounded-xl border border-white/10 bg-white/5 p-3 animate-pulse"><div class="h-3 w-16 bg-white/10 rounded mb-3"></div><div class="space-y-2"><div class="h-7 bg-white/10 rounded"></div><div class="h-7 bg-white/10 rounded"></div></div></div>'
+      ).join('') + '</div>';
     return;
   }
   const phase = calPhaseEl.value || 'Todas';
@@ -112,7 +115,7 @@ calendarEl.addEventListener('input', e => {
   clearTimeout(_betTimers[id]);
   _betTimers[id] = setTimeout(() => {
     if (ap.prediccion_local == null || ap.prediccion_visitante == null) return; // se requieren ambos
-    api.saveApuesta(id, ap.prediccion_local, ap.prediccion_visitante).catch(() => {});
+    api.saveApuesta(id, ap.prediccion_local, ap.prediccion_visitante).then(flashGuardado).catch(() => {});
   }, 700);
 });
 calPhaseEl.addEventListener('change', renderCalendar);

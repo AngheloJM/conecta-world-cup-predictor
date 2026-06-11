@@ -3,6 +3,21 @@
 //  Se carga al final: todas las funciones de los otros módulos ya existen.
 // ============================================================
 
+// ---------- Indicador "Guardado ✓" ----------
+let _savedTimer = null;
+function flashGuardado() {
+  const el = document.getElementById('saved-flag');
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.style.opacity = '1';
+  clearTimeout(_savedTimer);
+  _savedTimer = setTimeout(() => {
+    el.style.transition = 'opacity .4s';
+    el.style.opacity = '0';
+    setTimeout(() => el.classList.add('hidden'), 400);
+  }, 1300);
+}
+
 // ---------- Toast ----------
 function toast(msg, type) {
   const colors = { ok: 'bg-marca', win: 'bg-acento', err: 'bg-red-600' };
@@ -20,6 +35,12 @@ async function renderLeaderboard() {
   const tbody = document.getElementById('leaderboard');
   const podium = document.getElementById('podium');
   const sub = document.getElementById('tablero-sub');
+
+  // Skeleton mientras carga.
+  tbody.innerHTML = Array.from({ length: 5 }).map(() =>
+    '<tr class="animate-pulse"><td class="px-6 py-3.5"><div class="h-4 w-6 bg-white/10 rounded"></div></td><td class="px-2 py-3.5"><div class="h-4 w-32 bg-white/10 rounded"></div></td><td class="px-6 py-3.5"><div class="h-4 w-8 bg-white/10 rounded ml-auto"></div></td></tr>'
+  ).join('');
+
   let rows;
   try { rows = await api.getRanking(); } catch (_) { rows = null; }
 
@@ -146,7 +167,7 @@ let _saveTimer = null;
 function scheduleServerSave() {
   if (!Auth.token() || !predReady) return;
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => { api.saveSimulacion(_simPayload()).catch(() => {}); }, 900);
+  _saveTimer = setTimeout(() => { api.saveSimulacion(_simPayload()).then(flashGuardado).catch(() => {}); }, 900);
 }
 
 // ---------- Formulario del calendario ----------
@@ -158,6 +179,12 @@ let _dataResolve;
 const dataReadyPromise = new Promise(r => { _dataResolve = r; });
 
 async function bootstrapData() {
+  // Skeleton de grupos mientras llegan los partidos.
+  document.getElementById('groups').innerHTML = Array.from({ length: 8 }).map(() =>
+    '<div class="bg-white/5 rounded-card border border-white/10 p-3 animate-pulse"><div class="h-4 w-20 bg-white/10 rounded mb-3"></div>' +
+    '<div class="space-y-2">' + '<div class="h-7 bg-white/10 rounded"></div>'.repeat(4) + '</div></div>'
+  ).join('');
+
   try { PARTIDOS = await api.getPartidos(); } catch (_) { PARTIDOS = []; }
   buildGroupsFromPartidos(PARTIDOS);   // 12 grupos reales con escudos
   calcularDeadline(PARTIDOS);          // cierre = 30 min antes del primer partido

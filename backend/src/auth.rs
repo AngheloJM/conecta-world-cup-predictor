@@ -208,6 +208,19 @@ pub async fn register(
 pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> impl IntoResponse {
     let email = body.email.trim().to_lowercase();
 
+    // Rate limiting anti fuerza bruta: máx. 5 intentos por minuto por correo.
+    {
+        let mut intentos = st.login_attempts.lock().unwrap();
+        let entry = intentos.entry(email.clone()).or_insert((0, std::time::Instant::now()));
+        if entry.1.elapsed() > std::time::Duration::from_secs(60) {
+            *entry = (0, std::time::Instant::now());
+        }
+        if entry.0 >= 5 {
+            return err(StatusCode::TOO_MANY_REQUESTS, "Demasiados intentos. Espera un minuto.").into_response();
+        }
+        entry.0 += 1;
+    }
+
     let row = sqlx::query!(
         r#"SELECT id, nombre, email, password_hash, nombre_equipo, es_admin, puntos_totales
            FROM usuarios WHERE email = $1"#,
@@ -228,6 +241,9 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
     if !verify_password(&body.password, &user.password_hash) {
         return err(StatusCode::UNAUTHORIZED, "Correo o contraseña incorrectos").into_response();
     }
+
+    // Login correcto: limpia el contador de intentos.
+    st.login_attempts.lock().unwrap().remove(&email);
 
     // Promueve a admin si el email coincide con ADMIN_EMAIL (y aún no lo es).
     let mut es_admin = user.es_admin;

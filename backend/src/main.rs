@@ -17,14 +17,21 @@ use axum::{
 use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use tower_http::cors::{Any, CorsLayer};
 use utoipa::{OpenApi, ToSchema};
 
 // ------------------------------------------------------------ Estado y error compartidos
+/// Intentos de login por email (anti fuerza bruta): (intentos, inicio de ventana).
+pub type LoginAttempts = Arc<Mutex<HashMap<String, (u8, Instant)>>>;
+
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
     pub jwt_secret: String,
+    pub login_attempts: LoginAttempts,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -165,7 +172,11 @@ async fn main() -> anyhow::Result<()> {
     // Aplica las migraciones al arrancar (crea las tablas si no existen).
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let state = AppState { pool, jwt_secret };
+    let state = AppState {
+        pool,
+        jwt_secret,
+        login_attempts: Arc::new(Mutex::new(HashMap::new())),
+    };
 
     // Auto-sync: sincroniza resultados de la API cada 15 min (y al arrancar).
     {
