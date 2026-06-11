@@ -55,7 +55,7 @@ puntos según le atines.
 
 ---
 
-# Paso 2: Arma tu Predictor 🏆
+# Paso 2: Ordena los grupos 🏆
 
 En la pestaña **Predictor** ordenas los 12 grupos como crees que quedarán.
 
@@ -66,7 +66,7 @@ En la pestaña **Predictor** ordenas los 12 grupos como crees que quedarán.
 
 ---
 
-# Paso 2: Elige los mejores terceros
+# Paso 3: Elige los mejores terceros
 
 No solo pasan los primeros dos de cada grupo: también avanzan los **8 mejores
 terceros lugares**.
@@ -77,7 +77,7 @@ terceros lugares**.
 
 ---
 
-# Paso 2: Completa el bracket hasta el campeón
+# Paso 4: Completa el bracket hasta el campeón
 
 Llena la llave de eliminación: octavos, cuartos, semifinal y **la gran final**.
 
@@ -89,7 +89,7 @@ Llena la llave de eliminación: octavos, cuartos, semifinal y **la gran final**.
 
 ---
 
-# Paso 3: Apuesta los marcadores 📅
+# Paso 5: Apuesta los marcadores 📅
 
 En la pestaña **Calendario** predices el resultado exacto de cada partido.
 
