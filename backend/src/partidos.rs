@@ -10,7 +10,7 @@ use serde_json::json;
 use sqlx::PgPool;
 
 use crate::auth::AuthUser;
-use crate::scoring::{calcular_puntos, Fase};
+use crate::scoring::calcular_puntos;
 use crate::{ApiError, AppState};
 
 // ---------- Mapeo de la respuesta de football-data.org ----------
@@ -133,7 +133,7 @@ pub async fn sincronizar(pool: &PgPool, token: &str) -> Result<(i64, usize), Str
 // ============================================================
 pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
     let partidos = sqlx::query!(
-        r#"SELECT id, goles_local, goles_visitante, fase::text as "fase!"
+        r#"SELECT id, goles_local, goles_visitante
            FROM partidos
            WHERE estado = 'Finalizado' AND goles_local IS NOT NULL AND goles_visitante IS NOT NULL"#
     )
@@ -141,7 +141,6 @@ pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
     .await?;
 
     for p in &partidos {
-        let fase = Fase::from_db(&p.fase).unwrap_or(Fase::Grupos);
         let gl = p.goles_local.unwrap_or(0) as i32;
         let gv = p.goles_visitante.unwrap_or(0) as i32;
 
@@ -153,7 +152,7 @@ pub async fn recalcular_puntos(pool: &PgPool) -> Result<i64, sqlx::Error> {
         .await?;
 
         for a in &apuestas {
-            let pts = calcular_puntos(gl, gv, a.prediccion_local as i32, a.prediccion_visitante as i32, fase) as i16;
+            let pts = calcular_puntos(gl, gv, a.prediccion_local as i32, a.prediccion_visitante as i32) as i16;
             sqlx::query!("UPDATE apuestas_partidos SET puntos_ganados = $1 WHERE id = $2", pts, a.id)
                 .execute(pool)
                 .await?;

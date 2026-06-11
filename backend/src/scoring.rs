@@ -1,63 +1,37 @@
 //! Módulo de puntuación. Función PURA, sin I/O ni dependencias externas.
-//! Totalmente testeable de forma aislada.
+//! Sistema plano (igual en toda fase):
+//!   10 · Marcador exacto
+//!    7 · Diferencia de goles (mismo ganador, no empate, misma diferencia)
+//!    5 · Resultado simple (misma tendencia, diferencia distinta, o empate correcto)
+//!    2 · Consolación (tendencia equivocada pero aciertas los goles de un equipo)
+//!    0 · Error total
 
-/// Fase del partido. Determina la escala de puntos.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Fase {
-    Grupos,
-    Dieciseisavos,
-    Octavos,
-    Cuartos,
-    Semifinal,
-    Final,
-}
-
-impl Fase {
-    /// Parseo desde el ENUM `fase_partido` de PostgreSQL.
-    pub fn from_db(s: &str) -> Option<Self> {
-        match s {
-            "Grupos" => Some(Fase::Grupos),
-            "Dieciseisavos" => Some(Fase::Dieciseisavos),
-            "Octavos" => Some(Fase::Octavos),
-            "Cuartos" => Some(Fase::Cuartos),
-            "Semifinal" => Some(Fase::Semifinal),
-            "Final" => Some(Fase::Final),
-            _ => None,
-        }
-    }
-}
-
-/// Devuelve `1` (local), `-1` (visitante) o `0` (empate) según el signo del marcador.
-#[inline]
-fn signo(local: i32, visitante: i32) -> i32 {
-    (local - visitante).signum()
-}
-
-/// Algoritmo de cálculo de puntos escalados. **Función pura**.
-///
-/// - Resultado exacto:  Grupos +5 · 16vos/8vos/4tos +8 · Semifinal/Final +11
-/// - Ganador / empate:  Grupos +3 · 16vos/8vos/4tos +5 · Semifinal/Final +7
-/// - No acertó:         0
-pub fn calcular_puntos(goles_l: i32, goles_v: i32, pred_l: i32, pred_v: i32, fase: Fase) -> u8 {
-    // 1. Marcador exacto: máxima recompensa.
+/// Calcula el puntaje de un pronóstico contra el resultado real. **Función pura.**
+pub fn calcular_puntos(goles_l: i32, goles_v: i32, pred_l: i32, pred_v: i32) -> u8 {
+    // 10 · Marcador exacto.
     if goles_l == pred_l && goles_v == pred_v {
-        return match fase {
-            Fase::Grupos => 5,
-            Fase::Dieciseisavos | Fase::Octavos | Fase::Cuartos => 8,
-            Fase::Semifinal | Fase::Final => 11,
-        };
+        return 10;
     }
 
-    // 2. Mismo resultado (ganador o empate), pero marcador distinto.
-    if signo(goles_l, goles_v) == signo(pred_l, pred_v) {
-        return match fase {
-            Fase::Grupos => 3,
-            Fase::Dieciseisavos | Fase::Octavos | Fase::Cuartos => 5,
-            Fase::Semifinal | Fase::Final => 7,
-        };
+    let dif_real = goles_l - goles_v;
+    let dif_pred = pred_l - pred_v;
+    let misma_tendencia = dif_real.signum() == dif_pred.signum();
+
+    if misma_tendencia {
+        // 7 · Mismo ganador (no empate) y misma diferencia de goles.
+        if goles_l != goles_v && dif_real == dif_pred {
+            return 7;
+        }
+        // 5 · Misma tendencia (ganador con diferencia distinta, o empate correcto no exacto).
+        return 5;
     }
 
-    // 3. No acertó nada.
+    // 2 · Tendencia equivocada, pero aciertas los goles exactos de un equipo.
+    if goles_l == pred_l || goles_v == pred_v {
+        return 2;
+    }
+
+    // 0 · Error total.
     0
 }
 
@@ -66,38 +40,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn exacto_por_fase() {
-        assert_eq!(calcular_puntos(2, 1, 2, 1, Fase::Grupos), 5);
-        assert_eq!(calcular_puntos(2, 1, 2, 1, Fase::Octavos), 8);
-        assert_eq!(calcular_puntos(2, 1, 2, 1, Fase::Cuartos), 8);
-        assert_eq!(calcular_puntos(2, 1, 2, 1, Fase::Semifinal), 11);
-        assert_eq!(calcular_puntos(2, 1, 2, 1, Fase::Final), 11);
+    fn marcador_exacto() {
+        assert_eq!(calcular_puntos(2, 1, 2, 1), 10);
+        assert_eq!(calcular_puntos(0, 0, 0, 0), 10);
     }
 
     #[test]
-    fn ganador_correcto_marcador_distinto() {
-        // Real 2-1 (gana local), predicho 3-0 (gana local)
-        assert_eq!(calcular_puntos(2, 1, 3, 0, Fase::Grupos), 3);
-        assert_eq!(calcular_puntos(2, 1, 3, 0, Fase::Cuartos), 5);
-        assert_eq!(calcular_puntos(2, 1, 3, 0, Fase::Final), 7);
+    fn diferencia_de_goles() {
+        // mismo ganador (local) + misma diferencia (+2), no exacto
+        assert_eq!(calcular_puntos(2, 0, 3, 1), 7);
+        // mismo ejemplo del usuario: 1-0 vs 3-2 (+1 ambos) -> 7
+        assert_eq!(calcular_puntos(3, 2, 1, 0), 7);
+        // visitante con misma diferencia
+        assert_eq!(calcular_puntos(0, 2, 1, 3), 7);
     }
 
     #[test]
-    fn empate_correcto_marcador_distinto() {
-        assert_eq!(calcular_puntos(1, 1, 2, 2, Fase::Grupos), 3);
-        assert_eq!(calcular_puntos(0, 0, 3, 3, Fase::Semifinal), 7);
+    fn resultado_simple() {
+        // mismo ganador, diferencia distinta (+2 real vs +1 pred)
+        assert_eq!(calcular_puntos(2, 0, 1, 0), 5);
+        // empate correcto, no exacto
+        assert_eq!(calcular_puntos(2, 2, 1, 1), 5);
     }
 
     #[test]
-    fn fallo_total() {
-        // Real 2-1 (gana local), predicho 0-1 (gana visitante)
-        assert_eq!(calcular_puntos(2, 1, 0, 1, Fase::Grupos), 0);
-        assert_eq!(calcular_puntos(2, 1, 0, 1, Fase::Final), 0);
+    fn consolacion() {
+        // real 1-3 (gana visita), pred 1-1 (empate) -> tendencia mal, pero local exacto (1==1)
+        assert_eq!(calcular_puntos(1, 3, 1, 1), 2);
+        // visitante exacto
+        assert_eq!(calcular_puntos(3, 1, 0, 1), 2);
     }
 
     #[test]
-    fn parseo_fase_desde_db() {
-        assert_eq!(Fase::from_db("Cuartos"), Some(Fase::Cuartos));
-        assert_eq!(Fase::from_db("desconocido"), None);
+    fn error_total() {
+        // real 0-1 (gana visita), pred 2-0 (gana local), ningún gol coincide
+        assert_eq!(calcular_puntos(0, 1, 2, 0), 0);
     }
 }

@@ -53,9 +53,13 @@ $env:DATABASE_URL = "postgres://postgres:postgres@localhost:5432/conecta"
 cargo run    # http://localhost:3000
 ```
 
-## 🎯 Reglas de puntos (backend `scoring.rs`)
-| Acierto | Grupos | Octavos/Cuartos | Semifinal/Final |
-|---|---|---|---|
-| Marcador exacto | +5 | +8 | +11 |
-| Ganador / empate | +3 | +5 | +7 |
-| No acierta | 0 | 0 | 0 |
+## 🎯 Reglas de puntos (backend `scoring.rs`) — iguales en toda fase
+| Pts | Categoría | Condición |
+|---|---|---|
+| 10 | Marcador exacto | Aciertas los goles exactos de ambos equipos |
+| 7 | Diferencia de goles | Mismo ganador (no empate) y misma diferencia, sin ser exacto |
+| 5 | Resultado simple | Misma tendencia (ganador con diferencia distinta, o empate correcto) |
+| 2 | Consolación | Tendencia equivocada, pero aciertas los goles de un equipo |
+| 0 | Error total | Nada coincide |
+
+Desempate del ranking: más exactos (10) → más diferencias (7) → más simples (5) → registro más antiguo.

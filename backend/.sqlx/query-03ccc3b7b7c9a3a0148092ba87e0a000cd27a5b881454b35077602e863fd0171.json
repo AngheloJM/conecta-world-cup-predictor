@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, goles_local, goles_visitante, fase::text as \"fase!\"\n           FROM partidos\n           WHERE estado = 'Finalizado' AND goles_local IS NOT NULL AND goles_visitante IS NOT NULL",
+  "query": "SELECT id, goles_local, goles_visitante\n           FROM partidos\n           WHERE estado = 'Finalizado' AND goles_local IS NOT NULL AND goles_visitante IS NOT NULL",
   "describe": {
     "columns": [
       {
@@ -17,11 +17,6 @@
         "ordinal": 2,
         "name": "goles_visitante",
         "type_info": "Int2"
-      },
-      {
-        "ordinal": 3,
-        "name": "fase!",
-        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -30,9 +25,8 @@
     "nullable": [
       false,
       true,
-      true,
-      null
+      true
     ]
   },
-  "hash": "6c55656c413822f4be43978018380cea5cd7baa14a4435b0f33dad7e67c73586"
+  "hash": "03ccc3b7b7c9a3a0148092ba87e0a000cd27a5b881454b35077602e863fd0171"
 }

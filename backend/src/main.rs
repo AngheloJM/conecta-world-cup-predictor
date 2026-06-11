@@ -50,14 +50,25 @@ struct RankRow {
     nombre: String,
     nombre_equipo: Option<String>,
     puntos: i32,
+    exactos: i64,
+    diferencias: i64,
+    simples: i64,
 }
 
 #[utoipa::path(get, path = "/ranking", tag = "ranking",
     responses((status = 200, description = "Tabla de posiciones", body = [RankRow])))]
 async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
+    // Desempate jerárquico: puntos → más exactos (10) → más diferencias (7) → más simples (5) → registro más antiguo.
     let rows = sqlx::query!(
-        r#"SELECT id, nombre, nombre_equipo, puntos_totales
-           FROM usuarios ORDER BY puntos_totales DESC, fecha_registro ASC LIMIT 100"#
+        r#"SELECT u.id, u.nombre, u.nombre_equipo, u.puntos_totales,
+                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 10) AS "exactos!",
+                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 7)  AS "diferencias!",
+                  COUNT(*) FILTER (WHERE ap.puntos_ganados = 5)  AS "simples!"
+           FROM usuarios u
+           LEFT JOIN apuestas_partidos ap ON ap.usuario_id = u.id
+           GROUP BY u.id, u.nombre, u.nombre_equipo, u.puntos_totales, u.fecha_registro
+           ORDER BY u.puntos_totales DESC, "exactos!" DESC, "diferencias!" DESC, "simples!" DESC, u.fecha_registro ASC
+           LIMIT 100"#
     )
     .fetch_all(&state.pool)
     .await;
@@ -73,6 +84,9 @@ async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
                     nombre: r.nombre,
                     nombre_equipo: r.nombre_equipo,
                     puntos: r.puntos_totales,
+                    exactos: r.exactos,
+                    diferencias: r.diferencias,
+                    simples: r.simples,
                 })
                 .collect();
             (StatusCode::OK, Json(out)).into_response()
