@@ -1,256 +1,238 @@
 <!--
-  CONTENIDO PARA GAMMA AI
-  Cómo usarlo: Gamma (gamma.app) → Create new → "Paste in text" / Import →
-  pega TODO este contenido. Cada bloque separado por "---" es una diapositiva.
-  Los bloques ```mermaid se renderizan como diagramas.
-  Tono sugerido: profesional, deportivo, moderno. Acento naranja (#FF6B00) sobre azul noche (#0E1E47).
+  GUÍA DEL USUARIO — CONTENIDO PARA GAMMA AI
+  Cómo usarlo: gamma.app → Create new → "Paste in text" → pega TODO este contenido.
+  Cada bloque separado por "---" es una diapositiva.
+  Donde dice [📷 CAPTURA: ...] inserta una captura de pantalla real de la app.
+  Tono: amigable, motivador, para colaboradores (no técnico).
+  Colores de marca: naranja #FF6B00 sobre azul noche #0E1E47. Estilo deportivo y festivo. ⚽
 -->
 
-# Conecta · Predictor Copa FIFA 2026
+# 🏆 Polla Copa FIFA 2026
 
-### La polla mundialista corporativa, full-stack y en producción
+### ¡Demuestra que sabes de fútbol y gana!
 
-Plataforma web para que ~1,500 colaboradores predigan la Copa FIFA 2026, apuesten
-marcadores y compitan en un ranking que se actualiza **solo**.
+Bienvenido a la polla mundialista de la empresa. Arma tu Mundial, predice los
+marcadores y compite con todos tus compañeros por el primer lugar.
 
-`Rust` · `PostgreSQL` · `PWA` · `Vercel + Railway + Neon`
-
----
-
-# El reto
-
-Organizar una polla del Mundial para **toda la empresa** sin hojas de cálculo ni
-conteo manual.
-
-- 📊 **1,500+ usuarios** prediciendo en simultáneo
-- ⚽ **104 partidos**, 48 equipos, 12 grupos
-- 🧮 Puntaje **automático** con resultados reales
-- ⏱️ Reglas justas: nadie cambia su predicción después del pitazo
-- 💸 Presupuesto mínimo de infraestructura
+*Una guía rápida para empezar a jugar.*
 
 ---
 
-# Qué hace la app
+# ¿De qué se trata?
 
-- 🏆 **Predictor**: arma tu Mundial completo (grupos + terceros + bracket hasta el campeón)
-- 📅 **Calendario**: apuesta el marcador exacto de cada partido
-- 🎯 **Puntaje automático** con datos reales (football-data.org)
-- 📈 **Ranking** en vivo con criterios de desempate
-- 👤 **Mis Apuestas**: tu resumen personal de puntos
-- 🛠️ **Panel admin**: gestión y carga manual de resultados
-- 📱 **PWA**: instalable en el celular como app
+Es muy simple: **predices lo que crees que va a pasar en el Mundial** y ganas
+puntos según le atines.
 
----
+- ⚽ Predice los resultados de los **104 partidos**
+- 🏆 Arma tu **bracket** hasta el campeón
+- 📈 Sube en el **ranking** contra toda la empresa
+- 🎉 El que más puntos acumule, **gana**
 
-# Dos formas de jugar
-
-| | 🏆 Predictor | 📅 Apuestas por partido |
-|---|---|---|
-| **Qué predices** | Todo el torneo: grupos, terceros, bracket, campeón | El marcador de cada partido |
-| **Cierre** | Una vez, 30 min antes del 1.er partido | Cada partido, a su hora de inicio |
-| **Puntúa con** | Bonus por aciertos | 10 / 7 / 5 / 2 / 0 |
-
-Ambas son independientes y **suman al total**.
+> No necesitas ser experto: ¡todos tienen chance!
 
 ---
 
-# Arquitectura
+# Hay 2 formas de sumar puntos
 
-```mermaid
-flowchart LR
-    U[Usuarios<br/>navegador / celular] -->|HTTPS| F[Frontend<br/>Vercel · HTML+Tailwind+JS · PWA]
-    F -->|REST + JWT| B[Backend<br/>Railway · Rust + Axum]
-    B -->|SSL| D[(PostgreSQL<br/>Neon)]
-    B -->|cada 15 min| A[football-data.org<br/>resultados reales]
-    A -->|marcadores + ganador| B
-```
+| 🏆 El Predictor | 📅 Las Apuestas |
+|---|---|
+| Predices **todo el torneo**: quién pasa de cada grupo y quién llega a la final | Predices el **marcador exacto** de cada partido |
+| Lo armas **una vez**, antes de que arranque el Mundial | Vas apostando partido por partido |
 
-- **Frontend** estático (escala infinito en CDN)
-- **Backend** Rust: rapidísimo y liviano en memoria
-- **Base de datos** gestionada y gratuita
+**Las dos suman a tu puntaje total.** ¡Juega las dos para ganar más!
 
 ---
 
-# Stack tecnológico
+# Cómo empezar — Paso 1: Regístrate
 
-- **Backend:** Rust · Axum · SQLx · JWT · Argon2
-- **Base de datos:** PostgreSQL (Neon)
-- **Frontend:** HTML + Tailwind CSS + JavaScript vanilla (sin build)
-- **PWA:** instalable, con service worker (offline básico)
-- **Despliegue:** Vercel (front) · Railway (back) · Neon (BD)
-- **Datos reales:** API de football-data.org
+1. Entra al enlace de la polla (te lo compartimos)
+2. Crea tu cuenta con tu **correo y una contraseña**
+3. (Opcional) Ponle un **nombre a tu equipo** para el ranking
 
-> Sin frameworks pesados: carga rápida, mantenimiento simple.
+[📷 CAPTURA: pantalla de registro/login]
 
----
-
-# Flujo del usuario
-
-```mermaid
-flowchart TD
-    R[Registro / Login] --> P[Arma su Predictor<br/>grupos · terceros · bracket]
-    R --> C[Apuesta marcadores<br/>en el Calendario]
-    P --> S[(Se guarda solo)]
-    C --> S
-    S --> L[🔒 Se cierra al iniciar<br/>cada partido / el torneo]
-    L --> G[El Mundial avanza]
-    G --> X[Auto-sync trae resultados]
-    X --> Y[Cálculo de puntos]
-    Y --> T[📈 Ranking actualizado]
-```
+> Tu contraseña debe tener al menos **8 caracteres**.
 
 ---
 
-# Sistema de puntaje — por partido
+# Paso 2: Arma tu Predictor 🏆
 
-Igual en toda fase. Cada partido finalizado puntúa cada apuesta:
+En la pestaña **Predictor** ordenas los 12 grupos como crees que quedarán.
 
-| Pts | Categoría | Condición | Ejemplo |
-|---|---|---|---|
-| **10** | Marcador exacto | Goles exactos de ambos | 2-1 vs 2-1 |
-| **7** | Diferencia de goles | Mismo ganador + misma diferencia | 3-1 vs 2-0 |
-| **5** | Resultado simple | Acierta el ganador / empate | 2-0 vs 1-0 |
-| **2** | Consolación | Goles exactos de un equipo | 1-1 vs 1-3 |
-| **0** | Error total | Nada coincide | 2-0 vs 0-1 |
+- Arrastra los equipos (en el celular usa las flechas ▲▼)
+- El **1.º y 2.º** de cada grupo avanzan directo
+- Acomódalos del 1.º al 4.º según tu pronóstico
+
+[📷 CAPTURA: vista de los grupos del Predictor]
 
 ---
 
-# Sistema de puntaje — el Predictor
+# Paso 2: Elige los mejores terceros
 
-El bracket también suma, al compararse con lo que realmente pasa:
+No solo pasan los primeros dos de cada grupo: también avanzan los **8 mejores
+terceros lugares**.
 
-- 🏆 **Campeón correcto** → +25
-- 🥈 **Cada finalista** → +10
+- Marca los **8 grupos** cuyo tercer lugar crees que clasificará
+- Esos equipos entran al bracket
+
+[📷 CAPTURA: selección de mejores terceros]
+
+---
+
+# Paso 2: Completa el bracket hasta el campeón
+
+Llena la llave de eliminación: octavos, cuartos, semifinal y **la gran final**.
+
+- Ve eligiendo quién avanza en cada ronda
+- Al final, **corona a tu campeón** 🏆
+
+[📷 CAPTURA: bracket / llave de eliminación]
+
+> Se guarda solo. Verás un "Guardado ✓" cada vez.
+
+---
+
+# Paso 3: Apuesta los marcadores 📅
+
+En la pestaña **Calendario** predices el resultado exacto de cada partido.
+
+- Escribe los goles de cada equipo (ej. **2 - 1**)
+- Se guarda automáticamente
+- Puedes cambiarlo… **hasta que empiece el partido**
+
+[📷 CAPTURA: calendario con un partido y sus casillas de marcador]
+
+---
+
+# ⏰ ¡Ojo con los cierres!
+
+Para que sea justo, las predicciones se **cierran a tiempo**:
+
+- 🔒 **Tu Predictor (el bracket)** se congela **30 minutos antes** del primer
+  partido del Mundial. Después ya no se puede cambiar.
+- 🔒 **Cada apuesta de marcador** se cierra **cuando ese partido empieza**.
+
+> Consejo: ¡no lo dejes para el último minuto!
+
+---
+
+# ¿Cómo gano puntos por partido?
+
+Según qué tan cerca quedes del resultado real:
+
+| Puntos | Si aciertas… |
+|---|---|
+| **10** 🎯 | El marcador **exacto** |
+| **7** | El ganador **y** la diferencia de goles |
+| **5** | Solo quién gana (o el empate) |
+| **2** | Los goles exactos de **un** equipo |
+| **0** | Nada |
+
+---
+
+# Ejemplos de puntaje ⚽
+
+**Resultado real: México 2 – 1 Canadá**
+
+- Predijiste **2 – 1** → 🎯 **10 puntos** (exacto)
+- Predijiste **3 – 2** → **7 puntos** (gana México por 1, igual que el real)
+- Predijiste **1 – 0** → **5 puntos** (acertaste que gana México)
+- Predijiste **2 – 3** → **2 puntos** (acertaste los 2 goles de México)
+- Predijiste **0 – 1** → **0 puntos** (no coincide nada)
+
+---
+
+# Puntos EXTRA con tu Predictor 🏆
+
+Tu bracket también suma cuando aciertas:
+
+- 🏆 **Campeón correcto** → +25 puntos
+- 🥈 **Cada finalista** (los 2 de la final) → +10
 - 🥇 **1.º de cada grupo** → +5
-- ✅ **Cada clasificado top-2** → +3
-- 🟫 **Cada mejor tercero** → +2
+- ✅ **Cada equipo que clasifica (top 2)** → +3
+- 🟫 **Cada mejor tercero** que le atines → +2
 
-> Las tablas de grupos y el campeón se calculan de los **resultados reales**
-> (el campeón usa el ganador oficial, incluso por penales).
-
----
-
-# Reglas justas: bloqueos por tiempo
-
-Validados en el **servidor** (nadie los esquiva):
-
-```mermaid
-flowchart LR
-    subgraph Predictor
-    A[Bracket completo] -->|se congela| B[30 min antes<br/>del 1.er partido]
-    end
-    subgraph Apuestas
-    C[Cada partido] -->|se cierra| D[a su hora<br/>de inicio]
-    end
-```
-
-- 🔒 El **bracket** se congela una vez, antes del arranque
-- 🔒 Cada **apuesta** se cierra cuando empieza su partido
+> Acertar el campeón vale muchísimo: ¡piénsalo bien!
 
 ---
 
-# Todo automático: sincronización
+# El Tablero (ranking) 📈
 
-```mermaid
-flowchart LR
-    T[Tarea en segundo plano] -->|cada 15 min| API[football-data.org]
-    API --> U[Actualiza marcadores<br/>+ ganador]
-    U --> R[Recalcula puntos]
-    R --> RANK[Ranking al día]
-```
+Mira en qué lugar vas contra toda la empresa.
 
-- Corre **al arrancar y cada 15 minutos**
-- Trae marcador y **ganador real** de cada partido
-- Si la API falla un partido → el admin lo **carga a mano**
+- 🥇🥈🥉 Podio con los 3 primeros
+- Tu posición resaltada
+- Se actualiza **solo**, conforme terminan los partidos
+
+[📷 CAPTURA: tablero / ranking con el podio]
 
 ---
 
-# Ranking y desempates
+# ¿Y si hay empate en puntos?
 
-Orden por **puntos totales**. En caso de empate:
+Gana quien tenga (en este orden):
 
-1. 🥇 Más marcadores **exactos** (10 pts)
-2. 🎯 Más aciertos de **diferencia** (7 pts)
-3. ✅ Más **resultados simples** (5 pts)
-4. ⏱️ **Registro más antiguo**
+1. 🎯 Más marcadores **exactos** (de 10 puntos)
+2. Más aciertos de **diferencia** (de 7 puntos)
+3. Más **resultados simples** (de 5 puntos)
+4. ⏱️ Quien se **registró primero**
 
-- Podio (top 3) + tabla completa + tu posición
-- Conteos **pre-calculados** → el tablero abre al instante
-
----
-
-# Panel de administración
-
-Solo para administradores (rol por configuración):
-
-- 🔄 **Sincronizar** y **recalcular** con un clic
-- 👥 **Gestión de usuarios** (ver / eliminar)
-- ✍️ **Carga manual de resultados** (respaldo si la API falla)
-
-> El admin se define por variable de entorno: cero asignaciones a mano.
+> Por eso conviene apuntar a marcadores exactos. ¡Arriésgate!
 
 ---
 
-# Seguridad
+# Mis Apuestas 👤
 
-- 🔐 Contraseñas con **Argon2** (nunca en texto plano)
-- 🎫 Sesión con **JWT** (sin cookies → sin CSRF)
-- 🛡️ **CORS** restringido al dominio del frontend
-- 🚧 **Rate limiting** en login (5 intentos/min)
-- 📋 Cabeceras de seguridad (HSTS, X-Frame-Options, nosniff…)
-- 🔒 Base de datos por **SSL**
+Tu resumen personal en un solo lugar:
 
----
+- Tu **posición** y tus **puntos totales**
+- Cuántos exactos, diferencias y simples llevas
+- El **detalle de cada apuesta** y los puntos que te dio
 
-# Pensada para escala
-
-Optimización del cálculo de puntos para **1,500+ usuarios**:
-
-| | Antes | Ahora |
-|---|---|---|
-| Queries por recálculo | **~110,000** | **~6** |
-| Tiempo | ~60–90 s | **~50–100 ms** |
-
-- Scoring en **lote con SQL** (no una query por apuesta)
-- Índices + conteos materializados
-- Resultado: el recálculo es **instantáneo**
+[📷 CAPTURA: vista "Mis Apuestas"]
 
 ---
 
-# Costo de infraestructura
+# 📱 Instálala en tu celular
 
-```mermaid
-flowchart LR
-    V[Vercel<br/>Frontend] -->|Gratis| FREE1[$0]
-    N[Neon<br/>PostgreSQL] -->|Gratis| FREE2[$0]
-    R[Railway<br/>Backend] -->|Uso| COST[~$1.5–2.5/mes]
-```
+Para tenerla a la mano como una app:
 
-- Frontend y base de datos: **gratis**
-- Solo se paga el backend: **~$1.5–2.5/mes**
-- El Mundial completo (~6 semanas) entra en **$5**
+- **Android (Chrome):** menú ⋮ → "Instalar app" / "Agregar a pantalla de inicio"
+- **iPhone (Safari):** botón Compartir → "Agregar a inicio"
+
+[📷 CAPTURA: app instalada con su ícono en el celular]
+
+> Se abre como app, sin barras del navegador. ¡Cómodo y rápido!
 
 ---
 
-# Números clave
+# Consejos para ganar 💡
 
-- ⚽ **104** partidos · **48** equipos · **12** grupos
-- 👥 **1,500+** usuarios soportados
-- 🧮 **5** categorías de puntaje + **5** bonus del predictor
-- 🔄 Sync cada **15 min**, 100% automático
-- ⚡ Recálculo **~110,000 → 6** queries
-- 💸 **~$5** por todo el torneo
+- ✅ Llena **todo**: el bracket y los marcadores. Más predicciones = más puntos.
+- 🎯 Atrévete a poner marcadores **exactos** (valen 10 y desempatan).
+- 🏆 Piensa bien tu **campeón**: vale +25.
+- ⏰ Haz tus apuestas **con tiempo**, antes de cada cierre.
+- 🔁 Revisa el **calendario** seguido para no perder partidos.
 
 ---
 
-# Resultado
+# Preguntas frecuentes ❓
 
-Una **polla mundialista full-stack, real, segura y económica** — lista para que
-toda la empresa juegue la Copa FIFA 2026.
+**¿Puedo cambiar mi predicción?**
+Sí, hasta que cierre (el bracket antes del 1.er partido; cada marcador, al iniciar ese partido).
 
-- ✅ En producción (Vercel + Railway + Neon)
-- ✅ Puntaje y ranking automáticos
-- ✅ Justa (bloqueos por tiempo) y segura
-- ✅ Escala a 1,500+ usuarios dentro de presupuesto
+**¿Cuándo veo mis puntos?**
+Se calculan solos cuando terminan los partidos. Revisa el Tablero.
 
-### ⚽ ¡Listo para el pitazo inicial!
+**¿Necesito saber mucho de fútbol?**
+No. ¡La suerte y la intuición también cuentan!
+
+---
+
+# ⚽ ¡A jugar!
+
+Arma tu Mundial, apuesta tus marcadores y demuestra quién manda en la oficina.
+
+### Que gane el mejor pronosticador 🏆
+
+*Entra, regístrate y empieza ahora.*
