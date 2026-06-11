@@ -108,7 +108,7 @@ function showView(name) {
   });
   // El bracket sólo mide bien estando visible: redibuja conectores al entrar al Predictor.
   if (name === 'predictor') requestAnimationFrame(drawConnectors);
-  if (name === 'tablero') renderLeaderboard();   // ranking fresco al abrir
+  if (name === 'tablero') { renderLeaderboard(); renderSponsors(); }  // ranking + auspiciadores
   if (name === 'mis') renderMis();               // resumen personal fresco
   if (name === 'admin') renderAdmin();           // panel admin fresco
   window.scrollTo({ top: 0 });

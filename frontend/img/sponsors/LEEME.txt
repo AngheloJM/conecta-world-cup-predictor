@@ -1,0 +1,2 @@
+Pon aquí los logos de los auspiciadores (PNG/SVG).
+Luego referencialos en frontend/js/sponsors.js como: img/sponsors/archivo.png

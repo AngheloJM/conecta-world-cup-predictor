@@ -195,7 +195,10 @@
 
   <!-- ============ VISTA: TABLERO ============ -->
   <div id="view-tablero" class="hidden min-h-screen bg-gradient-to-b from-noche via-[#13245A] to-noche2">
-    <div class="max-w-4xl mx-auto px-4 lg:px-6 py-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 lg:px-6 py-8">
+     <div class="flex gap-6 xl:gap-10 items-start">
+      <aside id="ausp-left" class="hidden lg:block w-56 shrink-0 sticky top-32"></aside>
+      <div class="flex-1 min-w-0 space-y-6">
       <div class="flex items-end justify-between flex-wrap gap-2">
         <div>
           <h1 class="text-2xl lg:text-3xl font-extrabold text-white">Tablero de Líderes</h1>
@@ -233,6 +236,10 @@
           <tbody id="leaderboard" class="divide-y divide-white/10"></tbody>
         </table>
       </div>
+      </div>
+      <aside id="ausp-right" class="hidden lg:block w-56 shrink-0 sticky top-32"></aside>
+     </div>
+     <div id="ausp-mobile" class="lg:hidden mt-8"></div>
     </div>
   </div>
 
@@ -295,6 +302,7 @@
   <script src="js/predictor.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/mis.js"></script>
+  <script src="js/sponsors.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/main.js"></script>
   <script src="js/auth.js"></script>
