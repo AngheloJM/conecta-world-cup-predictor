@@ -31,6 +31,10 @@ async function renderMis() {
         <div class="text-[10px] uppercase tracking-wide text-blue-200">Puntos</div>
         <div class="text-3xl font-extrabold text-acento tabular-nums">${mi.puntos || 0}</div>
       </div>
+      <div>
+        <div class="text-[10px] uppercase tracking-wide text-blue-200">Bonus predictor</div>
+        <div class="text-3xl font-extrabold text-white tabular-nums">+${mi.predictor || 0}</div>
+      </div>
       <div class="flex gap-5 text-center">
         <div><div class="text-xl font-extrabold text-white">${mi.exactos || 0}</div><div class="text-[10px] text-blue-200">exactos</div></div>
         <div><div class="text-xl font-extrabold text-white">${mi.diferencias || 0}</div><div class="text-[10px] text-blue-200">diferencia</div></div>
