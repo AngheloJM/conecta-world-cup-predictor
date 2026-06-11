@@ -46,6 +46,7 @@ function renderGroups() {
 
 // Reordena un equipo dentro de su grupo y refresca todo (drag o botones ▲▼).
 function moveInGroup(g, from, to) {
+  if (predictorCerrado()) { toast('Predicciones cerradas', 'err'); return; }
   const arr = GROUPS[g];
   if (!arr || from === to || to < 0 || to >= arr.length) return;
   const [it] = arr.splice(from, 1);
@@ -100,6 +101,7 @@ function renderThirds() {
 }
 thirdsEl.addEventListener('click', e => {
   const btn = e.target.closest('[data-third]'); if (!btn) return;
+  if (predictorCerrado()) { toast('Predicciones cerradas', 'err'); return; }
   const g = btn.dataset.third;
   if (S.thirds.has(g)) S.thirds.delete(g);
   else if (S.thirds.size >= 8) { toast('Ya elegiste 8 terceros. Quita uno primero.', 'err'); return; }
@@ -171,6 +173,7 @@ function updateBracket() {
 
 bracketEl.addEventListener('click', e => {
   const btn = e.target.closest('[data-pick]'); if (!btn) return;
+  if (predictorCerrado()) { toast('Predicciones cerradas', 'err'); return; }
   const [round, idx, slot] = btn.dataset.pick.split(':'); const i = +idx, s = slot === 'a' ? 0 : 1;
   if (round === 'r32') { S.r32[i] = r32Teams()[i][s]; S.r16[Math.floor(i/2)] = null; S.qf[Math.floor(i/4)] = null; S.sf[Math.floor(i/8)] = null; S.f = null; }
   else if (round === 'r16') { S.r16[i] = [S.r32[i*2], S.r32[i*2+1]][s]; S.qf[Math.floor(i/2)] = null; S.sf[Math.floor(i/4)] = null; S.f = null; }
@@ -180,7 +183,10 @@ bracketEl.addEventListener('click', e => {
   updateBracket(); saveState();
   btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
 });
-document.getElementById('reset-bracket').addEventListener('click', () => { resetBracket(); updateBracket(); saveState(); toast('Llave reiniciada'); });
+document.getElementById('reset-bracket').addEventListener('click', () => {
+  if (predictorCerrado()) { toast('Predicciones cerradas', 'err'); return; }
+  resetBracket(); updateBracket(); saveState(); toast('Llave reiniciada');
+});
 
 // ---------- Conectores SVG (se dibujan 1 vez; las posiciones no cambian) ----------
 function drawConnectors() {

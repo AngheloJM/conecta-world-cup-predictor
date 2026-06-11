@@ -96,11 +96,23 @@ document.getElementById('tabs').addEventListener('click', e => {
   showView(b.dataset.view);
 });
 
-// ---------- Reloj (cuenta regresiva) ----------
+// ---------- Cierre del predictor ----------
+function predictorCerrado() {
+  return DEADLINE != null && Date.now() >= DEADLINE.getTime();
+}
+
+// ---------- Reloj (cuenta regresiva al cierre) ----------
 function tick() {
-  const diff = DEADLINE - new Date(); const s = Math.max(0, Math.floor(diff / 1000));
+  const chip = document.getElementById('cd-chip');
+  if (!DEADLINE) { chip.textContent = '--'; return; }
+  if (predictorCerrado()) {
+    chip.textContent = 'Cerrado';
+    document.getElementById('save-btn').disabled = true;
+    return;
+  }
+  const s = Math.max(0, Math.floor((DEADLINE - new Date()) / 1000));
   const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-  document.getElementById('cd-chip').textContent = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
+  chip.textContent = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
 }
 
 // ---------- Guardado de la predicción (local + servidor) ----------
@@ -114,8 +126,9 @@ function _simPayload() {
   };
 }
 
-// Guardado explícito (con feedback) — botón "Guardar" / "Enviar".
+// Guardado explícito (con feedback) — botón "Guardar".
 async function guardarPrediccion() {
+  if (predictorCerrado()) { toast('Predicciones cerradas: el Mundial ya va a comenzar', 'err'); return; }
   if (!Auth.token()) { saveState(); toast('Guardado localmente'); return; }
   try {
     await api.saveSimulacion(_simPayload());
@@ -147,6 +160,7 @@ const dataReadyPromise = new Promise(r => { _dataResolve = r; });
 async function bootstrapData() {
   try { PARTIDOS = await api.getPartidos(); } catch (_) { PARTIDOS = []; }
   buildGroupsFromPartidos(PARTIDOS);   // 12 grupos reales con escudos
+  calcularDeadline(PARTIDOS);          // cierre = 30 min antes del primer partido
 
   loadState();                          // estado local (si hay), defensivo
 

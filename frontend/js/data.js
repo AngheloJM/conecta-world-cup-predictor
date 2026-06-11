@@ -4,7 +4,13 @@
 // ============================================================
 
 const STORAGE_KEY = 'conecta_predictor_2026_v2';
-const DEADLINE = new Date('2026-06-12T11:00:00');
+
+// Cierre del predictor: 30 min antes del primer partido (se calcula desde los partidos reales).
+let DEADLINE = null;
+function calcularDeadline(partidos) {
+  const fechas = partidos.map(p => new Date(p.fecha_hora).getTime()).filter(t => !isNaN(t));
+  DEADLINE = fechas.length ? new Date(Math.min(...fechas) - 30 * 60 * 1000) : null;
+}
 
 // Grupos (se construyen desde los partidos reales: buildGroupsFromPartidos).
 const GROUPS = {};
