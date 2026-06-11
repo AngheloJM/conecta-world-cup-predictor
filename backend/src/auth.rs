@@ -23,8 +23,6 @@ pub struct RegisterReq {
     pub email: String,
     #[schema(example = "secreta123")]
     pub password: String,
-    #[schema(example = "Las Tigres")]
-    pub nombre_equipo: Option<String>,
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -40,7 +38,6 @@ pub struct UsuarioOut {
     pub id: i64,
     pub nombre: String,
     pub email: String,
-    pub nombre_equipo: Option<String>,
     pub es_admin: bool,
     pub puntos_totales: i32,
 }
@@ -177,14 +174,13 @@ pub async fn register(
 
     let row = sqlx::query!(
         r#"
-        INSERT INTO usuarios (nombre, email, password_hash, nombre_equipo, es_admin)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, nombre, email, nombre_equipo, es_admin, puntos_totales
+        INSERT INTO usuarios (nombre, email, password_hash, es_admin)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, nombre, email, es_admin, puntos_totales
         "#,
         body.nombre.trim(),
         email,
         hash,
-        body.nombre_equipo.as_deref(),
         es_admin,
     )
     .fetch_one(&st.pool)
@@ -204,7 +200,6 @@ pub async fn register(
                         id: u.id,
                         nombre: u.nombre,
                         email: u.email,
-                        nombre_equipo: u.nombre_equipo,
                         es_admin: u.es_admin,
                         puntos_totales: u.puntos_totales,
                     },
@@ -247,7 +242,7 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
     }
 
     let row = sqlx::query!(
-        r#"SELECT id, nombre, email, password_hash, nombre_equipo, es_admin, puntos_totales
+        r#"SELECT id, nombre, email, password_hash, es_admin, puntos_totales
            FROM usuarios WHERE email = $1"#,
         email,
     )
@@ -292,7 +287,6 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
                 id: user.id,
                 nombre: user.nombre,
                 email: user.email,
-                nombre_equipo: user.nombre_equipo,
                 es_admin,
                 puntos_totales: user.puntos_totales,
             },
@@ -312,7 +306,7 @@ pub async fn login(State(st): State<AppState>, Json(body): Json<LoginReq>) -> im
 )]
 pub async fn me(user: AuthUser, State(st): State<AppState>) -> impl IntoResponse {
     let row = sqlx::query!(
-        r#"SELECT id, nombre, email, nombre_equipo, es_admin, puntos_totales FROM usuarios WHERE id = $1"#,
+        r#"SELECT id, nombre, email, es_admin, puntos_totales FROM usuarios WHERE id = $1"#,
         user.id,
     )
     .fetch_optional(&st.pool)
@@ -325,7 +319,6 @@ pub async fn me(user: AuthUser, State(st): State<AppState>) -> impl IntoResponse
                 id: u.id,
                 nombre: u.nombre,
                 email: u.email,
-                nombre_equipo: u.nombre_equipo,
                 es_admin: u.es_admin,
                 puntos_totales: u.puntos_totales,
             }),

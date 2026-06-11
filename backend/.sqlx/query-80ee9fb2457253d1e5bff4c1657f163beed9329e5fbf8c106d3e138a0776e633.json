@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO usuarios (nombre, email, password_hash, nombre_equipo, es_admin)\n        VALUES ($1, $2, $3, $4, $5)\n        RETURNING id, nombre, email, nombre_equipo, es_admin, puntos_totales\n        ",
+  "query": "SELECT id, nombre, email, es_admin, puntos_totales FROM usuarios WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -20,37 +20,27 @@
       },
       {
         "ordinal": 3,
-        "name": "nombre_equipo",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 4,
         "name": "es_admin",
         "type_info": "Bool"
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "puntos_totales",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        "Varchar",
-        "Text",
-        "Varchar",
-        "Bool"
+        "Int8"
       ]
     },
     "nullable": [
       false,
       false,
       false,
-      true,
       false,
       false
     ]
   },
-  "hash": "190a98374d0388205ba0bcb2ec3e8b9b8eba55580f45be0f6da0296617fd75d9"
+  "hash": "80ee9fb2457253d1e5bff4c1657f163beed9329e5fbf8c106d3e138a0776e633"
 }

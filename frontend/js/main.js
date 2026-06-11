@@ -53,7 +53,7 @@ async function renderLeaderboard() {
 
   const yo = (Auth.user() || {}).id;
   const miFila = rows.find(r => r.id === yo);
-  const nombreDe = r => r.nombre_equipo || r.nombre;
+  const nombreDe = r => r.nombre;
 
   // Resumen + "mi posición"
   if (sub) sub.textContent = `${rows.length} ${rows.length === 1 ? 'jugador' : 'jugadores'} en juego.`;
@@ -93,7 +93,6 @@ async function renderLeaderboard() {
       <td class="px-6 py-3.5 font-bold ${r.pos <= 3 ? 'text-white' : 'text-blue-200'} w-12">${medalPos(r.pos)}</td>
       <td class="px-2 py-3.5 font-semibold text-white">
         ${nombreDe(r)}${esYo ? '<span class="ml-2 text-[10px] font-bold uppercase text-acento">Tú</span>' : ''}
-        ${r.nombre_equipo ? `<div class="text-[11px] text-blue-200/60 font-normal">${r.nombre}</div>` : ''}
       </td>
       <td class="px-6 py-3.5 text-right font-extrabold text-acento tabular-nums text-base">${r.puntos}</td>
     </tr>`;

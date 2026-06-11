@@ -56,7 +56,6 @@ struct RankRow {
     pos: i64,
     id: i64,
     nombre: String,
-    nombre_equipo: Option<String>,
     puntos: i32,
     predictor: i32,
     exactos: i32,
@@ -69,7 +68,7 @@ struct RankRow {
 async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
     // Desempate jerárquico (conteos materializados en recalcular_puntos): sin GROUP BY ni JOIN.
     let rows = sqlx::query!(
-        r#"SELECT id, nombre, nombre_equipo, puntos_totales, puntos_predictor,
+        r#"SELECT id, nombre, puntos_totales, puntos_predictor,
                   c_exactos, c_diferencias, c_simples
            FROM usuarios
            ORDER BY puntos_totales DESC, c_exactos DESC, c_diferencias DESC, c_simples DESC, fecha_registro ASC
@@ -87,7 +86,6 @@ async fn ranking(State(state): State<AppState>) -> impl IntoResponse {
                     pos: (i as i64) + 1,
                     id: r.id,
                     nombre: r.nombre,
-                    nombre_equipo: r.nombre_equipo,
                     puntos: r.puntos_totales,
                     predictor: r.puntos_predictor,
                     exactos: r.c_exactos,

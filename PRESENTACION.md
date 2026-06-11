@@ -46,8 +46,8 @@ puntos según le atines.
 # Cómo empezar — Paso 1: Regístrate
 
 1. Entra al enlace de la polla (te lo compartimos)
-2. Crea tu cuenta con tu **correo y una contraseña**
-3. (Opcional) Ponle un **nombre a tu equipo** para el ranking
+2. Crea tu cuenta con tu **nombre, correo y una contraseña**
+3. ¡Listo! Compites de forma **individual** con tu nombre
 
 [📷 CAPTURA: pantalla de registro/login]
 

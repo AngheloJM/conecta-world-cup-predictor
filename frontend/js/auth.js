@@ -7,7 +7,6 @@ const authView = document.getElementById('view-auth');
 const authForm = document.getElementById('auth-form');
 const authError = document.getElementById('auth-error');
 const fieldNombre = document.getElementById('field-nombre');
-const fieldEquipo = document.getElementById('field-equipo');
 const authSubmit = document.getElementById('auth-submit');
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
@@ -20,7 +19,6 @@ function setAuthMode(mode) {
   authMode = mode;
   const isLogin = mode === 'login';
   fieldNombre.classList.toggle('hidden', isLogin);
-  fieldEquipo.classList.toggle('hidden', isLogin);
   document.getElementById('auth-nombre').required = !isLogin;
   authSubmit.textContent = isLogin ? 'Ingresar' : 'Crear cuenta';
   tabLogin.classList.toggle('bg-acento', isLogin);
@@ -94,7 +92,6 @@ authForm.addEventListener('submit', async (e) => {
         nombre: document.getElementById('auth-nombre').value.trim(),
         email,
         password,
-        nombre_equipo: document.getElementById('auth-equipo').value.trim() || null,
       });
     }
     Auth.set(resp.token, resp.usuario);

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, nombre, email, nombre_equipo, es_admin, puntos_totales FROM usuarios WHERE id = $1",
+  "query": "SELECT id, nombre, email, password_hash, es_admin, puntos_totales\n           FROM usuarios WHERE email = $1",
   "describe": {
     "columns": [
       {
@@ -20,8 +20,8 @@
       },
       {
         "ordinal": 3,
-        "name": "nombre_equipo",
-        "type_info": "Varchar"
+        "name": "password_hash",
+        "type_info": "Text"
       },
       {
         "ordinal": 4,
@@ -36,17 +36,17 @@
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Text"
       ]
     },
     "nullable": [
       false,
       false,
       false,
-      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "f24640c0ff2f0581e55289d69ea116df91e48db4a466ce39f66cf9d976117b4c"
+  "hash": "b51ed291831d95a3576bfe15c9b81b45f3fb625077b3b198e8d7a09d2e781daf"
 }
