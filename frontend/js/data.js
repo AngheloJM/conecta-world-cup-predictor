@@ -5,11 +5,18 @@
 
 const STORAGE_KEY = 'conecta_predictor_2026_v2';
 
-// Cierre del predictor: justo al iniciar el primer partido (se calcula desde los partidos reales).
+// Cierre del predictor.
+// REAPERTURA TEMPORAL (decisión de dirección, 11-jun-2026): el bracket queda abierto
+// hasta el primer partido del 12 de junio (Canadá vs Bosnia, 19:00 UTC = 15:00 Bolivia).
+// Para volver al comportamiento normal (cierre al primer partido), restaurar el cálculo
+// con Math.min(...fechas) que está comentado abajo.
+const REAPERTURA_DEADLINE = '2026-06-12T19:00:00Z';
 let DEADLINE = null;
 function calcularDeadline(partidos) {
-  const fechas = partidos.map(p => new Date(p.fecha_hora).getTime()).filter(t => !isNaN(t));
-  DEADLINE = fechas.length ? new Date(Math.min(...fechas)) : null;
+  DEADLINE = new Date(REAPERTURA_DEADLINE);
+  // Comportamiento normal:
+  // const fechas = partidos.map(p => new Date(p.fecha_hora).getTime()).filter(t => !isNaN(t));
+  // DEADLINE = fechas.length ? new Date(Math.min(...fechas)) : null;
 }
 
 // Grupos (se construyen desde los partidos reales: buildGroupsFromPartidos).

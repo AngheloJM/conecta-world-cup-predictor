@@ -14,14 +14,16 @@ use utoipa::ToSchema;
 use crate::auth::AuthUser;
 use crate::{ApiError, AppState};
 
-/// ¿Ya cerró el predictor? Cierra `PREDICTOR_BUFFER_MIN` minutos (def. 30)
-/// antes del primer partido del torneo.
-async fn predictor_cerrado(pool: &PgPool) -> bool {
-    let buffer: i64 = std::env::var("PREDICTOR_BUFFER_MIN").ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-    match sqlx::query_scalar!("SELECT MIN(fecha_hora) FROM partidos").fetch_one(pool).await {
-        Ok(Some(min)) => Utc::now() >= min - chrono::Duration::minutes(buffer),
-        _ => false,
-    }
+/// ¿Ya cerró el predictor?
+/// REAPERTURA TEMPORAL (decisión de dirección, 11-jun-2026): el bracket queda abierto
+/// hasta el primer partido del 12 de junio (Canadá vs Bosnia, 19:00 UTC = 15:00 Bolivia).
+/// Para volver al comportamiento normal (cierre al primer partido), restaurar la consulta
+/// `SELECT MIN(fecha_hora) FROM partidos` con el buffer de `PREDICTOR_BUFFER_MIN`.
+async fn predictor_cerrado(_pool: &PgPool) -> bool {
+    let reapertura = chrono::DateTime::parse_from_rfc3339("2026-06-12T19:00:00Z")
+        .expect("fecha de reapertura válida")
+        .with_timezone(&Utc);
+    Utc::now() >= reapertura
 }
 
 #[derive(Deserialize, ToSchema)]
