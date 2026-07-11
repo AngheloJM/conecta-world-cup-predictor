@@ -1,9 +1,9 @@
 // ============================================================
 //  CONFIG · URL del backend
-//  En local apunta a localhost:3000. En producción, reemplaza
-//  la URL por la del backend desplegado en Railway (paso 5).
+//  En local apunta a localhost:3000. En producción, al backend
+//  desplegado en Render.
 // ============================================================
 const API_BASE =
   (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:')
     ? 'http://localhost:3000'
-    : 'https://wordcupback-production.up.railway.app'; // backend desplegado en Railway
+    : 'https://conecta-world-cup-predictor.onrender.com'; // backend desplegado en Render
