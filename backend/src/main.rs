@@ -199,6 +199,33 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Keep-alive: en Render (plan free) el servicio se duerme tras 15 min sin tráfico.
+    // Un auto-ping cada 10 min a su propia URL pública lo mantiene despierto.
+    // Render inyecta RENDER_EXTERNAL_URL automáticamente; SELF_PING_URL permite forzarla.
+    {
+        let base = std::env::var("RENDER_EXTERNAL_URL")
+            .or_else(|_| std::env::var("SELF_PING_URL"))
+            .ok();
+        match base {
+            Some(base) => {
+                let url = format!("{}/health", base.trim_end_matches('/'));
+                tokio::spawn(async move {
+                    let client = reqwest::Client::new();
+                    let mut intervalo = tokio::time::interval(std::time::Duration::from_secs(600));
+                    intervalo.tick().await; // consume el tick inmediato (no hace falta pinguearse al arrancar)
+                    loop {
+                        intervalo.tick().await;
+                        match client.get(&url).send().await {
+                            Ok(r) => tracing::debug!("keep-alive {url} -> {}", r.status()),
+                            Err(e) => tracing::warn!("keep-alive error: {e}"),
+                        }
+                    }
+                });
+            }
+            None => tracing::info!("Sin RENDER_EXTERNAL_URL/SELF_PING_URL: keep-alive desactivado (normal en local)"),
+        }
+    }
+
     // CORS: en producción restringido a los orígenes de CORS_ORIGINS (coma-separados);
     // sin esa variable (desarrollo local) permite cualquier origen.
     let cors = match std::env::var("CORS_ORIGINS") {
