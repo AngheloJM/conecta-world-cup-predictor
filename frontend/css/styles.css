@@ -21,3 +21,29 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 .tab-btn { color: #bfdbfe; }
 .tab-btn:hover { color: #ffffff; background: rgba(255,255,255,.08); }
 .tab-active, .tab-active:hover { color: #ffffff; background: #FF6B00; }
+
+/* ---- Podio: brillo y destello del campeón (1.º) ---- */
+.pod-bar { position: relative; overflow: hidden; }
+
+.pod-winner { animation: winnerGlow 2.6s ease-in-out infinite; }
+@keyframes winnerGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,.45), 0 0 24px -6px rgba(251,191,36,.45); }
+  50%      { box-shadow: 0 0 0 1px rgba(251,191,36,.75), 0 0 46px -2px rgba(251,191,36,.8); }
+}
+/* Reflejo que barre la barra del campeón */
+.pod-winner::after {
+  content: ""; position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: skewX(-18deg); pointer-events: none;
+  animation: winnerShine 2.8s ease-in-out infinite;
+}
+@keyframes winnerShine { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+
+/* Corona flotante sobre el 1.º */
+.crown { animation: crownFloat 2.4s ease-in-out infinite; }
+@keyframes crownFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-winner, .crown { animation: none; }
+  .pod-winner::after { display: none; }
+}

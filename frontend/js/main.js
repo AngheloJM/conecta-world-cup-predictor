@@ -66,22 +66,31 @@ async function renderLeaderboard() {
     miPuesto.classList.add('hidden');
   }
 
-  // Podio (top 3)
-  const alturas = ['h-24', 'h-20', 'h-16'];
+  // Podio (top 3) — colores por medalla + brillo para el campeón.
+  const alturas = ['h-28', 'h-20', 'h-16'];
   const medallas = ['🥇', '🥈', '🥉'];
   const orden = [1, 0, 2]; // 2.º, 1.º, 3.º para el efecto podio
+  // Indexado por puesto (0=1.º, 1=2.º, 2=3.º).
+  const estilo = [
+    { bar: 'border-amber-300/60 bg-gradient-to-t from-amber-400/30 to-amber-300/5', pts: 'text-amber-300' }, // oro
+    { bar: 'border-slate-300/45 bg-gradient-to-t from-slate-300/20 to-slate-200/5', pts: 'text-slate-200' }, // plata
+    { bar: 'border-orange-400/45 bg-gradient-to-t from-orange-500/22 to-orange-400/5', pts: 'text-orange-300' }, // bronce
+  ];
   podium.innerHTML = orden.map(i => {
     const r = rows[i];
     if (!r) return '<div></div>';
     const esYo = r.id === yo;
+    const st = estilo[i] || estilo[2];
+    const campeon = i === 0;
     return `
     <div class="flex flex-col justify-end items-center">
+      ${campeon ? '<div class="crown text-2xl leading-none -mb-0.5">👑</div>' : ''}
       <div class="text-3xl mb-1">${medallas[i]}</div>
       <div class="text-center mb-2">
         <div class="font-bold text-white text-sm truncate max-w-[9rem]">${nombreDe(r)}${esYo ? ' <span class="text-acento">·Tú</span>' : ''}</div>
-        <div class="text-acento font-extrabold tabular-nums">${r.puntos} pts</div>
+        <div class="${st.pts} font-extrabold tabular-nums">${r.puntos} pts</div>
       </div>
-      <div class="w-full ${alturas[i]} rounded-t-xl border-t border-x ${esYo ? 'border-acento bg-acento/15' : 'border-white/10 bg-white/5'} flex items-start justify-center pt-1.5 text-xs font-bold text-blue-200">${r.pos}.º</div>
+      <div class="pod-bar w-full ${alturas[i]} rounded-t-xl border-t border-x ${st.bar} ${campeon ? 'pod-winner' : ''} ${esYo ? 'ring-1 ring-acento/60' : ''} flex items-start justify-center pt-1.5 text-xs font-bold text-white/90">${r.pos}.º</div>
     </div>`;
   }).join('');
 
